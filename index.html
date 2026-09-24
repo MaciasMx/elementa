@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="Elementa: la tabla periódica interactiva, elemento por elemento. Proyecto escolar.">
+<title>Elementa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* institutional identity, fixed in both themes */
+    --navy-900:#002147; --navy-700:#003366; --gold-500:#ffd700; --gold-600:#d4af37;
+
+    --surface-100:#02101f; --surface-200:#003366; --surface-300:#0d3f6f; --border:#6f97ba;
+    --ink:#eef1f4; --ink-muted:#9fb0c2; --ink-on-fill:#002147;
+    --accent:#ffd700; --accent-strong:#d4af37; --link:#ffd700; --focus-ring:#ffd700;
+
+    --cat-alkali-metal:#ff8264; --cat-alkaline-earth:#ffb15c; --cat-transition-metal:#f4c430;
+    --cat-post-transition:#b6cf6e; --cat-metalloid:#5fd39d; --cat-nonmetal:#3fd6cd;
+    --cat-halogen:#63b8ec; --cat-noble-gas:#93a3f5; --cat-lanthanide:#cf95ea;
+    --cat-actinide:#ec8dbb; --cat-unknown:#aab2bc;
+
+    --shadow-tile:0 1px 2px rgba(0,0,0,.4); --shadow-card:0 16px 40px rgba(0,0,0,.55);
+    --shadow-glow:0 0 0 3px rgba(255,215,0,.45);
+    --scrim: rgba(1,6,12,.72);
+
+    --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:24px; --space-6:32px; --space-7:48px; --space-8:64px;
+    --radius-sm:6px; --radius-md:12px; --radius-lg:20px; --radius-full:999px;
+    --font-display:"Space Grotesk", system-ui, sans-serif;
+    --font-sans:"IBM Plex Sans", system-ui, sans-serif;
+    --font-mono:"IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --surface-100:#f4f6f9; --surface-200:#ffffff; --surface-300:#e4e9f0; --border:#65799e;
+      --ink:#002147; --ink-muted:#3d5875; --ink-on-fill:#002147;
+      --accent:#ffd700; --accent-strong:#d4af37; --link:#003366; --focus-ring:#003366;
+      --shadow-tile:0 1px 2px rgba(0,33,71,.14); --shadow-card:0 16px 40px rgba(0,33,71,.20);
+      --shadow-glow:0 0 0 3px rgba(0,51,102,.35);
+      --scrim: rgba(0,33,71,.45);
+      color-scheme: light;
+    }
+  }
+  :root[data-theme="light"]{
+    --surface-100:#f4f6f9; --surface-200:#ffffff; --surface-300:#e4e9f0; --border:#65799e;
+    --ink:#002147; --ink-muted:#3d5875; --ink-on-fill:#002147;
+    --accent:#ffd700; --accent-strong:#d4af37; --link:#003366; --focus-ring:#003366;
+    --shadow-tile:0 1px 2px rgba(0,33,71,.14); --shadow-card:0 16px 40px rgba(0,33,71,.20);
+    --shadow-glow:0 0 0 3px rgba(0,51,102,.35);
+    --scrim: rgba(0,33,71,.45);
+    color-scheme: light;
+  }
+  :root[data-theme="dark"]{
+    --surface-100:#02101f; --surface-200:#003366; --surface-300:#0d3f6f; --border:#6f97ba;
+    --ink:#eef1f4; --ink-muted:#9fb0c2; --ink-on-fill:#002147;
+    --accent:#ffd700; --accent-strong:#d4af37; --link:#ffd700; --focus-ring:#ffd700;
+    --shadow-tile:0 1px 2px rgba(0,0,0,.4); --shadow-card:0 16px 40px rgba(0,0,0,.55);
+    --shadow-glow:0 0 0 3px rgba(255,215,0,.45);
+    --scrim: rgba(1,6,12,.72);
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--surface-100); color:var(--ink);
+    font-family:var(--font-sans);
+  }
+  a{ color:var(--link); }
+  .wrap{ max-width:1400px; margin:0 auto; padding-inline: var(--space-4); padding-block: var(--space-5); }
+
+  /* masthead: fixed institutional navy, independent of light/dark toggle */
+  header.top{
+    position: sticky; top: env(safe-area-inset-top, 0px);
+    z-index: 20;
+    background: var(--navy-900);
+    padding-block: var(--space-3);
+    padding-inline: var(--space-4);
+    display:flex; align-items:center; gap:var(--space-4); flex-wrap:wrap;
+    border-bottom: 3px solid var(--gold-500);
+  }
+  .brand-block{ display:flex; flex-direction:column; gap:2px; margin-right:auto; }
+  .brand-name{ font-family:var(--font-display); font-weight:700; font-size:26px; letter-spacing:-.01em; color:var(--gold-500); }
+  .brand-tag{ font-family:var(--font-sans); font-size:12px; color:#c9d6e6; }
+  .search{
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.35); border-radius:var(--radius-md);
+    color:#fff; font-family:var(--font-sans); font-size:14px; padding:var(--space-2) var(--space-3);
+    min-width: 170px;
+  }
+  .search::placeholder{ color:#c9d6e6; }
+  .icon-btn, .theme-btn{
+    background:transparent; border:1px solid rgba(255,255,255,.5); color:#fff;
+    font-family:var(--font-sans); font-size:13px; font-weight:600; border-radius:var(--radius-full);
+    padding:var(--space-2) var(--space-4); cursor:pointer;
+  }
+  .icon-btn{
+    width:34px; height:34px; padding:0; display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-size:16px; font-weight:700; color:var(--gold-500); border-color:var(--gold-500);
+  }
+  .search:focus-visible, .icon-btn:focus-visible, .theme-btn:focus-visible, .tile:focus-visible{ outline:2px solid var(--gold-500); outline-offset:2px; }
+
+  .legend{
+    display:flex; flex-wrap:wrap; gap:var(--space-2) var(--space-3);
+    background:var(--surface-300); border-radius:var(--radius-md);
+    padding:var(--space-3) var(--space-4);
+    margin-bottom: var(--space-2);
+  }
+  .legend-item{
+    display:flex; align-items:center; gap:var(--space-2);
+    background:none; border:1px solid transparent; border-radius:var(--radius-full);
+    padding:4px 10px 4px 6px; margin:-4px 0; cursor:pointer; font:inherit;
+    transition: background-color .15s ease, border-color .15s ease, opacity .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .legend-item:hover{ background:var(--surface-200); }
+  .legend-item:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px; }
+  .legend-item.is-active{ background:var(--surface-200); border-color:var(--border); }
+  .legend-item.is-dim{ opacity:.45; }
+  .legend-swatch{ width:12px; height:12px; border-radius:var(--radius-sm); flex:none; }
+  .legend-label{ font-family:var(--font-sans); font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ink); white-space:nowrap; }
+  .legend-hint{
+    font-family:var(--font-sans); font-size:11px; color:var(--ink-muted);
+    margin-bottom: var(--space-5);
+  }
+
+  .table-scroll{ overflow-x:auto; padding-bottom:var(--space-3); }
+  .grid{
+    display:grid;
+    grid-template-columns: 30px repeat(18, minmax(58px, 1fr));
+    grid-auto-rows: minmax(64px, auto);
+    gap: 4px;
+    min-width: 1120px;
+  }
+  .grid .spacer-row{ grid-row:9; grid-column:1/-1; height:var(--space-4); }
+  .hd{
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:10.5px; font-weight:600; color:var(--ink-muted);
+  }
+  .hd-period{ grid-column:1; justify-content:flex-end; padding-right:4px; }
+  .hd-group{ grid-row:1; }
+
+  .tile{
+    border-radius:var(--radius-sm);
+    border:1px solid rgba(0,0,0,.1);
+    box-shadow: var(--shadow-tile);
+    padding: 4px 5px;
+    display:flex; flex-direction:column; justify-content:space-between; gap:1px;
+    color:var(--ink-on-fill);
+    cursor:pointer;
+    transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+    -webkit-tap-highlight-color: transparent;
+    text-align:left;
+    font: inherit;
+    overflow:hidden;
+  }
+  .tile:hover{ transform:translateY(-2px); box-shadow:var(--shadow-card); z-index:2; }
+  .tile.is-dim{ opacity:.15; pointer-events:none; }
+  .t-num{ font-family:var(--font-mono); font-size:9px; font-weight:600; opacity:.8; line-height:1; }
+  .t-symbol{ font-family:var(--font-display); font-weight:700; font-size:16px; line-height:1.1; }
+  .t-name{ font-family:var(--font-sans); font-size:6.4px; font-weight:600; text-transform:uppercase; letter-spacing:.01em; opacity:.9; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .t-mass{ font-family:var(--font-mono); font-size:7px; font-weight:500; opacity:.75; line-height:1.1; }
+
+  footer.note{
+    margin-top: var(--space-6); font-family:var(--font-sans); font-size:12px; color:var(--ink-muted); text-align:center;
+  }
+
+  /* ---- shared modal scaffolding ---- */
+  .scrim{
+    position:fixed; inset:0; background:var(--scrim);
+    display:flex; align-items:center; justify-content:center;
+    padding: var(--space-5);
+    z-index:100;
+    animation: scrimIn .25s ease both;
+  }
+  .scrim[hidden]{ display:none; }
+  @keyframes scrimIn{ from{opacity:0;} to{opacity:1;} }
+  @keyframes cardIn{ from{opacity:0; transform:scale(.92) translateY(14px);} to{opacity:1; transform:scale(1) translateY(0);} }
+  @media (prefers-reduced-motion: reduce){ .scrim, .card, .help-card{ animation:none; } }
+
+  .close-btn{
+    position:absolute; top:var(--space-3); right:var(--space-3); z-index:5;
+    width:28px; height:28px; border-radius:var(--radius-full);
+    background:var(--surface-300); border:none; cursor:pointer;
+  }
+  .close-btn::before, .close-btn::after{
+    content:""; position:absolute; top:50%; left:50%; width:12px; height:2px; background:var(--ink-muted); border-radius:2px;
+  }
+  .close-btn::before{ transform:translate(-50%,-50%) rotate(45deg); }
+  .close-btn::after{ transform:translate(-50%,-50%) rotate(-45deg); }
+
+  /* ---- element card ---- */
+  .card{
+    width:100%; max-width:460px; height:min(560px, 90vh);
+    background:var(--surface-200); border:1px solid var(--border); border-radius:var(--radius-md);
+    box-shadow:var(--shadow-card);
+    position:relative; overflow:hidden;
+    animation: cardIn .38s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .track{ display:flex; width:200%; height:100%; transition: transform .38s cubic-bezier(.2,.8,.2,1); touch-action:pan-y; }
+  .track.show-usage{ transform: translateX(-50%); }
+  .face{ width:50%; flex:none; height:100%; overflow-y:auto; padding: var(--space-5); touch-action:pan-y; }
+
+  .mini-tile{
+    width:64px; height:76px; border-radius:var(--radius-md); box-shadow:var(--shadow-card);
+    display:flex; flex-direction:column; justify-content:space-between; padding:6px 8px;
+    color:var(--ink-on-fill); margin: 0 auto var(--space-3);
+  }
+  .mini-tile .t-num{ font-size:10px; }
+  .mini-tile .t-symbol{ font-size:22px; }
+  .mini-tile .t-mass{ font-size:8.5px; }
+
+  .f-meta{ font-family:var(--font-mono); font-size:12.5px; color:var(--ink-muted); margin-top:2px; text-align:center; }
+  .f-badge{
+    display:flex; align-items:center; justify-content:center; margin: 0 auto var(--space-4); width:fit-content;
+    font-family:var(--font-sans); font-size:11px; font-weight:600;
+    text-transform:uppercase; letter-spacing:.04em; color:var(--ink-on-fill);
+    padding:4px 10px; border-radius:var(--radius-full);
+  }
+
+  /* ---- large element box, styled after a printed periodic-table card ---- */
+  .element-box{
+    display:grid; grid-template-columns:1fr 1fr; column-gap:var(--space-4); row-gap:3px;
+    border-radius:var(--radius-lg); box-shadow:var(--shadow-card);
+    color:var(--ink-on-fill); padding:var(--space-4) var(--space-5); position:relative;
+  }
+  .eb-field{ display:flex; flex-direction:column; }
+  .eb-field.right{ align-items:flex-end; text-align:right; }
+  .eb-label{
+    font-family:var(--font-sans); font-size:9px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.05em; opacity:.78;
+  }
+  .eb-value{ font-family:var(--font-mono); font-size:14px; font-weight:700; margin-top:2px; }
+  .eb-symbol{
+    grid-column:1 / 3; text-align:center; font-family:var(--font-display); font-weight:700;
+    font-size:clamp(48px,14vw,72px); line-height:1; margin:var(--space-3) 0 0;
+  }
+  .eb-config{
+    grid-column:1 / 3; text-align:center; font-family:var(--font-mono); font-size:13px;
+    font-weight:600; margin-top:2px; word-break:break-word;
+  }
+  .eb-name{
+    grid-column:1 / 3; text-align:center; font-family:var(--font-display); font-weight:600;
+    font-size:20px; margin-top:var(--space-3); padding-top:var(--space-3);
+    border-top:1px solid color-mix(in srgb, var(--ink-on-fill) 25%, transparent);
+  }
+
+  .f-divider{ height:1px; background:var(--border); opacity:.5; margin:var(--space-5) 0; }
+  .action-btn{
+    width:100%; display:flex; align-items:center; justify-content:space-between;
+    background:var(--accent); color:var(--ink-on-fill);
+    font-family:var(--font-sans); font-size:14px; font-weight:600;
+    border:none; border-radius:var(--radius-md); padding:var(--space-3) var(--space-4); cursor:pointer;
+  }
+  .action-btn:hover{ background:var(--accent-strong); }
+  .chevron{ width:8px; height:8px; border-right:2px solid var(--ink-on-fill); border-bottom:2px solid var(--ink-on-fill); transform:rotate(-45deg); flex:none; }
+
+  .back-btn{
+    display:flex; align-items:center; gap:6px; background:none; border:none; cursor:pointer;
+    font-family:var(--font-sans); font-size:12px; font-weight:600; color:var(--link);
+    text-transform:uppercase; letter-spacing:.04em; padding:0; margin-bottom:var(--space-4);
+  }
+  .back-chevron{ width:7px; height:7px; border-left:2px solid var(--link); border-bottom:2px solid var(--link); transform:rotate(45deg); }
+  .u-title{ font-family:var(--font-display); font-weight:600; font-size:19px; color:var(--ink); }
+
+  .info-block{ margin-bottom: var(--space-5); }
+  .info-label{ font-family:var(--font-sans); font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-muted); margin-bottom:4px; }
+  .info-value{ font-family:var(--font-sans); font-size:14px; color:var(--ink); line-height:1.45; }
+  .info-value.mono{ font-family:var(--font-mono); font-size:15px; font-weight:600; word-break:break-word; }
+  .u-list{ display:flex; flex-direction:column; gap:var(--space-3); }
+  .u-item{ display:flex; gap:var(--space-3); }
+  .u-dot{ width:8px; height:8px; border-radius:var(--radius-full); background:var(--accent); margin-top:6px; flex:none; }
+  .u-desc{ font-family:var(--font-sans); font-size:13.5px; color:var(--ink); line-height:1.45; }
+
+  /* ---- help popover ---- */
+  .help-card{
+    width:100%; max-width:360px; background:var(--surface-200); border:1px solid var(--border);
+    border-radius:var(--radius-md); box-shadow:var(--shadow-card); position:relative; padding:var(--space-5);
+    animation: cardIn .3s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .help-title{ font-family:var(--font-display); font-weight:600; font-size:18px; color:var(--ink); margin-bottom:var(--space-4); padding-right:24px; }
+  .help-row{ display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-3); }
+  .help-text{ font-family:var(--font-sans); font-size:12.5px; color:var(--ink); line-height:1.4; }
+  .help-text b{ color:var(--ink); }
+
+  @media (max-width: 640px){
+    .brand-name{ font-size:22px; }
+    .search{ min-width: 120px; flex:1; }
+  }
+
+  /* ---- card view: browse elements one at a time, no horizontal table scroll ---- */
+  .cv-stage{ max-width:460px; margin:0 auto; }
+  .cv-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:var(--space-3); margin-bottom:var(--space-4); }
+  .cv-toolbar .back-btn{ margin-bottom:0; }
+  .cv-counter{ font-family:var(--font-mono); font-size:12.5px; color:var(--ink-muted); white-space:nowrap; }
+  #cvCard{ animation:none; touch-action:pan-y; cursor:grab; will-change:transform; }
+  #cvCard.is-dragging{ cursor:grabbing; }
+  .cv-swipe-hint{
+    text-align:center; font-family:var(--font-sans); font-size:11px; color:var(--ink-muted);
+    margin-top:var(--space-3);
+  }
+  .cv-nav{ display:flex; gap:var(--space-3); margin-top:var(--space-4); }
+  .nav-btn{
+    flex:1; background:var(--surface-300); color:var(--ink); border:1px solid var(--border);
+    font-family:var(--font-sans); font-size:13.5px; font-weight:600; border-radius:var(--radius-md);
+    padding:var(--space-3) var(--space-4); cursor:pointer;
+  }
+  .nav-btn:hover:not(:disabled){ background:var(--surface-200); }
+  .nav-btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .nav-btn:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand-block">
+      <span class="brand-name">Elementa</span>
+      <span class="brand-tag">La tabla periódica, elemento por elemento</span>
+    </div>
+    <input class="search" type="search" id="search" placeholder="Buscar elemento…" aria-label="Buscar por nombre, símbolo o número">
+    <button class="theme-btn" id="cardViewBtn" type="button">Vista de tarjetas</button>
+    <button class="icon-btn" id="helpBtn" type="button" aria-label="¿Cómo leer una casilla?">?</button>
+    <button class="theme-btn" id="themeBtn" type="button">Tema: Oscuro</button>
+  </header>
+
+  <div id="tableView">
+    <div class="legend" id="legend"></div>
+    <div class="legend-hint" id="legendHint">Haz clic en una categoría para filtrar la tabla; haz clic de nuevo para quitar el filtro.</div>
+
+    <div class="table-scroll">
+      <div class="grid" id="grid"></div>
+    </div>
+  </div>
+
+  <div id="cardViewSection" hidden>
+    <div class="cv-stage">
+      <div class="cv-toolbar">
+        <button class="back-btn" id="cvExitBtn" type="button">
+          <span class="back-chevron"></span>
+          Volver a la tabla
+        </button>
+        <div class="cv-counter" id="cvCounter"></div>
+      </div>
+
+      <div class="card" id="cvCard">
+        <div class="track" id="cvTrack">
+          <div class="face" id="cvFaceProps">
+            <span class="f-badge" id="cvBadge"></span>
+            <div class="element-box" id="cvBox">
+              <div class="eb-field"><span class="eb-label">Número atómico</span><span class="eb-value" id="cvNum"></span></div>
+              <div class="eb-field right"><span class="eb-label">Peso atómico</span><span class="eb-value" id="cvMass"></span></div>
+              <div class="eb-field"><span class="eb-label">Punto de ebullición</span><span class="eb-value" id="cvBoil"></span></div>
+              <div class="eb-field right"><span class="eb-label">Punto de fusión</span><span class="eb-value" id="cvMelt"></span></div>
+              <div class="eb-field"><span class="eb-label">Densidad</span><span class="eb-value" id="cvDensity"></span></div>
+              <div class="eb-field right"><span class="eb-label">Valencia</span><span class="eb-value" id="cvValence"></span></div>
+              <div class="eb-symbol" id="cvSymbol"></div>
+              <div class="eb-config" id="cvConfig"></div>
+              <div class="eb-name" id="cvName"></div>
+            </div>
+            <div class="f-divider"></div>
+            <button class="action-btn" id="cvInfoBtn" type="button">
+              <span>Más información</span>
+              <span class="chevron"></span>
+            </button>
+          </div>
+          <div class="face" id="cvFaceInfo">
+            <button class="back-btn" id="cvBackBtn" type="button">
+              <span class="back-chevron"></span>
+              Volver al elemento
+            </button>
+            <div class="u-title">Más información</div>
+            <div class="f-meta" id="cvInfoSubtitle" style="text-align:left; margin-bottom:var(--space-5);"></div>
+            <div class="info-block">
+              <div class="info-label">Origen del nombre</div>
+              <div class="info-value" id="cvOrigin"></div>
+            </div>
+            <div class="info-block">
+              <div class="info-label">Número de oxidación</div>
+              <div class="info-value mono" id="cvOx"></div>
+            </div>
+            <div class="info-block">
+              <div class="info-label">Valencias</div>
+              <div class="info-value mono" id="cvValencias"></div>
+            </div>
+            <div class="info-block">
+              <div class="info-label">Estado de agregación</div>
+              <div class="info-value" id="cvPhase"></div>
+            </div>
+            <div class="info-block">
+              <div class="info-label">Usos principales</div>
+              <div class="u-list" id="cvUsageList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cv-nav">
+        <button class="nav-btn" id="cvPrevBtn" type="button">‹ Anterior</button>
+        <button class="nav-btn" id="cvNextBtn" type="button">Siguiente ›</button>
+      </div>
+      <div class="cv-swipe-hint">También puedes deslizar la tarjeta hacia los lados para cambiar de elemento.</div>
+    </div>
+  </div>
+
+  <footer class="note">118 elementos · datos fijos, cargados de un archivo JSON local — prototipo de Elementa</footer>
+</div>
+
+<div class="scrim" id="scrim" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="ebName">
+    <button class="close-btn" id="closeBtn" type="button" aria-label="Cerrar"></button>
+    <div class="track" id="track">
+      <div class="face" id="faceProps">
+        <span class="f-badge" id="cardBadge"></span>
+
+        <div class="element-box" id="elementBox">
+          <div class="eb-field">
+            <span class="eb-label">Número atómico</span>
+            <span class="eb-value" id="ebNum"></span>
+          </div>
+          <div class="eb-field right">
+            <span class="eb-label">Peso atómico</span>
+            <span class="eb-value" id="ebMass"></span>
+          </div>
+          <div class="eb-field">
+            <span class="eb-label">Punto de ebullición</span>
+            <span class="eb-value" id="ebBoil"></span>
+          </div>
+          <div class="eb-field right">
+            <span class="eb-label">Punto de fusión</span>
+            <span class="eb-value" id="ebMelt"></span>
+          </div>
+          <div class="eb-field">
+            <span class="eb-label">Densidad</span>
+            <span class="eb-value" id="ebDensity"></span>
+          </div>
+          <div class="eb-field right">
+            <span class="eb-label">Valencia</span>
+            <span class="eb-value" id="ebValence"></span>
+          </div>
+          <div class="eb-symbol" id="ebSymbol"></div>
+          <div class="eb-config" id="ebConfig"></div>
+          <div class="eb-name" id="ebName"></div>
+        </div>
+
+        <div class="f-divider"></div>
+        <button class="action-btn" id="infoBtn" type="button">
+          <span>Más información</span>
+          <span class="chevron"></span>
+        </button>
+      </div>
+      <div class="face" id="faceInfo">
+        <button class="back-btn" id="backBtn" type="button">
+          <span class="back-chevron"></span>
+          Volver al elemento
+        </button>
+        <div class="u-title" id="infoTitle">Más información</div>
+        <div class="f-meta" id="infoSubtitle" style="text-align:left; margin-bottom:var(--space-5);"></div>
+
+        <div class="info-block">
+          <div class="info-label">Origen del nombre</div>
+          <div class="info-value" id="infoOrigin"></div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Número de oxidación</div>
+          <div class="info-value mono" id="infoOx"></div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Valencias</div>
+          <div class="info-value mono" id="infoValencias"></div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Estado de agregación</div>
+          <div class="info-value" id="infoPhase"></div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Usos principales</div>
+          <div class="u-list" id="usageList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="helpScrim" hidden>
+  <div class="help-card" role="dialog" aria-modal="true" aria-label="Cómo leer una casilla">
+    <button class="close-btn" id="helpCloseBtn" type="button" aria-label="Cerrar"></button>
+    <div class="help-title">Cómo leer una casilla</div>
+    <div style="display:flex; gap:var(--space-4); align-items:flex-start;">
+      <div class="mini-tile" id="helpMiniTile" style="margin:0; flex:none;">
+        <span class="t-num">26</span>
+        <span class="t-symbol">Fe</span>
+        <span class="t-mass">55.845</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div class="help-text"><b>Color de fondo</b> — categoría química del elemento (ver la leyenda).</div>
+        <div class="help-text"><b>26</b> — número atómico (Z): cuántos protones tiene.</div>
+        <div class="help-text"><b>Fe</b> — símbolo químico del elemento.</div>
+        <div class="help-text"><b>55.845</b> — masa atómica, en unidades de masa atómica (u).</div>
+      </div>
+    </div>
+    <div style="margin-top:var(--space-4); display:flex; flex-direction:column; gap:6px;">
+      <div class="help-text">Al hacer clic en una casilla se abre su tarjeta: un recuadro grande, del color de su categoría, con número atómico, peso atómico, punto de ebullición, punto de fusión, densidad, valencia, símbolo, <b>estructura atómica</b> (configuración electrónica) y nombre completo. El botón "Más información" desliza hacia el origen del nombre, el número de oxidación, las valencias, el estado de agregación y los usos principales.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var ELEMENTS = [{"number":1,"symbol":"H","name":"Hidrógeno","mass":"1.008","category":"cat-nonmetal","categoryLabel":"No metal","period":1,"group":1,"xpos":1,"ypos":1,"phase":"Gas","electronConfig":"1s1","shells":[1],"shellsLabel":"1","valenceElectrons":1,"boilLabel":"-252.9 °C","meltLabel":"-259.2 °C","densityLabel":"0.08988 g/L","origin":"Del griego 'hydro' (agua) y 'genes' (que genera): 'el que genera agua'. Aislado por Henry Cavendish en 1766.","oxidationStates":[-1,1],"oxidationLabel":"-1, +1","valencesLabel":"1","uses":["Combustible de cohetes y, cada vez más, de celdas de combustible para vehículos.","Materia prima para producir amoníaco (fertilizantes) mediante el proceso Haber-Bosch."]},{"number":2,"symbol":"He","name":"Helio","mass":"4.0026","category":"cat-noble-gas","categoryLabel":"Gas noble","period":1,"group":18,"xpos":18,"ypos":1,"phase":"Gas","electronConfig":"1s2","shells":[2],"shellsLabel":"2","valenceElectrons":2,"boilLabel":"-268.9 °C","meltLabel":"-272.2 °C","densityLabel":"0.1786 g/L","origin":"Del griego 'helios' (Sol): se detectó primero en el espectro solar, en 1868, antes de hallarse en la Tierra.","oxidationStates":[],"oxidationLabel":"No establecido","valencesLabel":"No establecidas","uses":["Inflar globos y dirigibles, por ser mucho más ligero que el aire y no inflamable.","Enfriar imanes superconductores, como los de los equipos de resonancia magnética."]},{"number":3,"symbol":"Li","name":"Litio","mass":"6.94","category":"cat-alkali-metal","categoryLabel":"Metal alcalino","period":2,"group":1,"xpos":1,"ypos":2,"phase":"Sólido","electronConfig":"[He] 2s1","shells":[2,1],"shellsLabel":"2, 1","valenceElectrons":1,"boilLabel":"1329.8 °C","meltLabel":"180.5 °C","densityLabel":"0.534 g/cm³","origin":"Del griego 'lithos' (piedra): a diferencia del sodio y el potasio, se descubrió en un mineral y no en tejido vegetal.","oxidationStates":[1],"oxidationLabel":"+1","valencesLabel":"1","uses":["Baterías recargables de iones de litio de teléfonos, laptops y autos eléctricos.","Tratamiento de ciertos trastornos del estado de ánimo, en forma de carbonato de litio."]},{"number":4,"symbol":"Be","name":"Berilio","mass":"9.01218","category":"cat-alkaline-earth","categoryLabel":"Metal alcalinotérreo","period":2,"group":2,"xpos":2,"ypos":2,"phase":"Sólido","electronConfig":"[He] 2s2","shells":[2,2],"shellsLabel":"2, 2","valenceElectrons":2,"boilLabel":"2468.8 °C","meltLabel":"1286.8 °C","densityLabel":"1.85 g/cm³","origin":"Del griego 'beryllos', el mineral berilo, del que se aisló por primera vez en 1798.","oxidationStates":[2],"oxidationLabel":"+2","valencesLabel":"2","uses":["Ventanas para tubos de rayos X, por dejar pasar la radiación casi sin absorberla.","Aleaciones ligeras y muy rígidas para piezas aeroespaciales."]},{"number":5,"symbol":"B","name":"Boro","mass":"10.81","category":"cat-metalloid","categoryLabel":"Metaloide","period":2,"group":13,"xpos":13,"ypos":2,"phase":"Sólido","electronConfig":"[He] 2s2 2p1","shells":[2,3],"shellsLabel":"2, 3","valenceElectrons":3,"boilLabel":"3926.8 °C","meltLabel":"2075.8 °C","densityLabel":"2.08 g/cm³","origin":"Del árabe 'buraq' y el persa 'burah', nombres del bórax, el mineral del que se extrae.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Fibra de vidrio y cerámicas de borosilicato (como el vidrio Pyrex).","Micronutriente esencial para el crecimiento de las plantas."]},{"number":6,"symbol":"C","name":"Carbono","mass":"12.011","category":"cat-nonmetal","categoryLabel":"No metal","period":2,"group":14,"xpos":14,"ypos":2,"phase":"Sólido","electronConfig":"[He] 2s2 2p2","shells":[2,4],"shellsLabel":"2, 4","valenceElectrons":4,"boilLabel":"No determinado","meltLabel":"No determinado","densityLabel":"1.821 g/cm³","origin":"Del latín 'carbo' (carbón): se conoce y se usa desde la prehistoria, en forma de hollín, carbón y diamante.","oxidationStates":[-4,-2,2,4],"oxidationLabel":"-4, -2, +2, +4","valencesLabel":"2, 4","uses":["Base de toda la química orgánica y de los seres vivos.","Grafito para minas de lápiz y electrodos; diamante en joyería y herramientas de corte."]},{"number":7,"symbol":"N","name":"Nitrógeno","mass":"14.007","category":"cat-nonmetal","categoryLabel":"No metal","period":2,"group":15,"xpos":15,"ypos":2,"phase":"Gas","electronConfig":"[He] 2s2 2p3","shells":[2,5],"shellsLabel":"2, 5","valenceElectrons":5,"boilLabel":"-195.8 °C","meltLabel":"-210 °C","densityLabel":"1.251 g/L","origin":"Del griego 'nitron genes' (que genera salitre); descubierto por Daniel Rutherford en 1772.","oxidationStates":[-3,-2,-1,1,2,3,4,5],"oxidationLabel":"-3, -2, -1, +1, +2, +3, +4, +5","valencesLabel":"1, 2, 3, 4, 5","uses":["Componente del 78% del aire que respiramos; se usa como gas inerte para conservar alimentos.","Materia prima de fertilizantes nitrogenados y explosivos."]},{"number":8,"symbol":"O","name":"Oxígeno","mass":"15.999","category":"cat-nonmetal","categoryLabel":"No metal","period":2,"group":16,"xpos":16,"ypos":2,"phase":"Gas","electronConfig":"[He] 2s2 2p4","shells":[2,6],"shellsLabel":"2, 6","valenceElectrons":6,"boilLabel":"-183 °C","meltLabel":"-218.8 °C","densityLabel":"1.429 g/L","origin":"Del griego 'oxys genes' (que genera ácidos), nombre acuñado por Lavoisier en 1777.","oxidationStates":[-2,-1,1,2],"oxidationLabel":"-2, -1, +1, +2","valencesLabel":"1, 2","uses":["Indispensable para la respiración humana y la combustión.","Oxigenoterapia en hospitales y soldadura con soplete oxiacetilénico."]},{"number":9,"symbol":"F","name":"Flúor","mass":"18.9984","category":"cat-halogen","categoryLabel":"Halógeno","period":2,"group":17,"xpos":17,"ypos":2,"phase":"Gas","electronConfig":"[He] 2s2 2p5","shells":[2,7],"shellsLabel":"2, 7","valenceElectrons":7,"boilLabel":"-188.1 °C","meltLabel":"-219.7 °C","densityLabel":"1.696 g/L","origin":"Del latín 'fluere' (fluir), por usarse la fluorita como fundente en la metalurgia.","oxidationStates":[-1],"oxidationLabel":"-1","valencesLabel":"1","uses":["Fluoruro de sodio en pastas dentales, para prevenir la caries.","Teflón (politetrafluoroetileno) en sartenes antiadherentes."]},{"number":10,"symbol":"Ne","name":"Neón","mass":"20.1798","category":"cat-noble-gas","categoryLabel":"Gas noble","period":2,"group":18,"xpos":18,"ypos":2,"phase":"Gas","electronConfig":"[He] 2s2 2p6","shells":[2,8],"shellsLabel":"2, 8","valenceElectrons":8,"boilLabel":"-246 °C","meltLabel":"-248.6 °C","densityLabel":"0.9002 g/L","origin":"Del griego 'neos' (nuevo): así lo llamaron Ramsay y Travers al descubrirlo en 1898.","oxidationStates":[],"oxidationLabel":"No establecido","valencesLabel":"No establecidas","uses":["Letreros luminosos de neón, por el resplandor rojo-anaranjado que produce al conducir electricidad.","Láseres de alta potencia."]},{"number":11,"symbol":"Na","name":"Sodio","mass":"22.9898","category":"cat-alkali-metal","categoryLabel":"Metal alcalino","period":3,"group":1,"xpos":1,"ypos":3,"phase":"Sólido","electronConfig":"[Ne] 3s1","shells":[2,8,1],"shellsLabel":"2, 8, 1","valenceElectrons":1,"boilLabel":"882.9 °C","meltLabel":"97.8 °C","densityLabel":"0.968 g/cm³","origin":"Del inglés 'soda', por aislarse del hidróxido de sodio o sosa cáustica (su símbolo Na viene del latín 'natrium').","oxidationStates":[1],"oxidationLabel":"+1","valencesLabel":"1","uses":["Sal de mesa (cloruro de sodio) y conservación de alimentos.","Lámparas de vapor de sodio para alumbrado público."]},{"number":12,"symbol":"Mg","name":"Magnesio","mass":"24.305","category":"cat-alkaline-earth","categoryLabel":"Metal alcalinotérreo","period":3,"group":2,"xpos":2,"ypos":3,"phase":"Sólido","electronConfig":"[Ne] 3s2","shells":[2,8,2],"shellsLabel":"2, 8, 2","valenceElectrons":2,"boilLabel":"1089.8 °C","meltLabel":"649.9 °C","densityLabel":"1.738 g/cm³","origin":"De Magnesia, una región de Grecia de donde se extraían minerales de este elemento.","oxidationStates":[2],"oxidationLabel":"+2","valencesLabel":"2","uses":["Aleaciones ligeras para carrocerías de autos y piezas de aviones.","Suplemento mineral y componente de antiácidos y laxantes."]},{"number":13,"symbol":"Al","name":"Aluminio","mass":"26.9815","category":"cat-post-transition","categoryLabel":"Otro metal (post-transición)","period":3,"group":13,"xpos":13,"ypos":3,"phase":"Sólido","electronConfig":"[Ne] 3s2 3p1","shells":[2,8,3],"shellsLabel":"2, 8, 3","valenceElectrons":3,"boilLabel":"2469.8 °C","meltLabel":"660.3 °C","densityLabel":"2.7 g/cm³","origin":"Del latín 'alumen' (alumbre), la sal que se usaba desde la antigüedad para teñir telas.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Latas de bebidas, papel aluminio y estructuras de aviones, por ser ligero y resistente a la corrosión.","Cableado eléctrico de alta tensión."]},{"number":14,"symbol":"Si","name":"Silicio","mass":"28.085","category":"cat-metalloid","categoryLabel":"Metaloide","period":3,"group":14,"xpos":14,"ypos":3,"phase":"Sólido","electronConfig":"[Ne] 3s2 3p2","shells":[2,8,4],"shellsLabel":"2, 8, 4","valenceElectrons":4,"boilLabel":"3264.8 °C","meltLabel":"1413.8 °C","densityLabel":"2.329 g/cm³","origin":"Del latín 'silex' (pedernal), por ser el componente principal de la arena y el cuarzo.","oxidationStates":[-4,2,4],"oxidationLabel":"-4, +2, +4","valencesLabel":"2, 4","uses":["Chips y celdas solares, como semiconductor base de la electrónica.","Vidrio y siliconas para selladores e implantes médicos."]},{"number":15,"symbol":"P","name":"Fósforo","mass":"30.9738","category":"cat-nonmetal","categoryLabel":"No metal","period":3,"group":15,"xpos":15,"ypos":3,"phase":"Sólido","electronConfig":"[Ne] 3s2 3p3","shells":[2,8,5],"shellsLabel":"2, 8, 5","valenceElectrons":5,"boilLabel":"No determinado","meltLabel":"No determinado","densityLabel":"1.823 g/cm³","origin":"Del griego 'phosphoros' (portador de luz), porque brilla débilmente en la oscuridad al oxidarse.","oxidationStates":[-3,3,5],"oxidationLabel":"-3, +3, +5","valencesLabel":"3, 5","uses":["Fertilizantes agrícolas (como fosfatos).","Fósforos de seguridad y aditivo en refrescos de cola."]},{"number":16,"symbol":"S","name":"Azufre","mass":"32.06","category":"cat-nonmetal","categoryLabel":"No metal","period":3,"group":16,"xpos":16,"ypos":3,"phase":"Sólido","electronConfig":"[Ne] 3s2 3p4","shells":[2,8,6],"shellsLabel":"2, 8, 6","valenceElectrons":6,"boilLabel":"444.6 °C","meltLabel":"115.2 °C","densityLabel":"2.07 g/cm³","origin":"Nombre de origen antiguo (sánscrito 'sulvere'); se conoce desde la antigüedad como 'azufre'.","oxidationStates":[-2,2,4,6],"oxidationLabel":"-2, +2, +4, +6","valencesLabel":"2, 4, 6","uses":["Fabricación de ácido sulfúrico, uno de los productos químicos industriales más usados en el mundo.","Vulcanización del caucho para llantas."]},{"number":17,"symbol":"Cl","name":"Cloro","mass":"35.45","category":"cat-halogen","categoryLabel":"Halógeno","period":3,"group":17,"xpos":17,"ypos":3,"phase":"Gas","electronConfig":"[Ne] 3s2 3p5","shells":[2,8,7],"shellsLabel":"2, 8, 7","valenceElectrons":7,"boilLabel":"-34 °C","meltLabel":"-101.5 °C","densityLabel":"3.2 g/L","origin":"Del griego 'chloros' (verde amarillento), por el color de este gas.","oxidationStates":[-1,1,3,4,5,6,7],"oxidationLabel":"-1, +1, +3, +4, +5, +6, +7","valencesLabel":"1, 3, 4, 5, 6, 7","uses":["Desinfección del agua potable y de albercas.","Fabricación de PVC y de blanqueadores domésticos."]},{"number":18,"symbol":"Ar","name":"Argón","mass":"39.9481","category":"cat-noble-gas","categoryLabel":"Gas noble","period":3,"group":18,"xpos":18,"ypos":3,"phase":"Gas","electronConfig":"[Ne] 3s2 3p6","shells":[2,8,8],"shellsLabel":"2, 8, 8","valenceElectrons":8,"boilLabel":"-185.8 °C","meltLabel":"-189.3 °C","densityLabel":"1.784 g/L","origin":"Del griego 'argos' (inactivo, perezoso), por su nula reactividad química.","oxidationStates":[],"oxidationLabel":"No establecido","valencesLabel":"No establecidas","uses":["Atmósfera protectora en soldadura, para evitar que el metal reaccione con el aire.","Relleno de focos incandescentes y ventanas de doble cristal."]},{"number":19,"symbol":"K","name":"Potasio","mass":"39.0983","category":"cat-alkali-metal","categoryLabel":"Metal alcalino","period":4,"group":1,"xpos":1,"ypos":4,"phase":"Sólido","electronConfig":"[Ar] 4s1","shells":[2,8,8,1],"shellsLabel":"2, 8, 8, 1","valenceElectrons":1,"boilLabel":"758.9 °C","meltLabel":"63.6 °C","densityLabel":"0.862 g/cm³","origin":"Del inglés 'potash' (ceniza de olla), por obtenerse tradicionalmente de las cenizas vegetales (su símbolo K viene del latín 'kalium').","oxidationStates":[1],"oxidationLabel":"+1","valencesLabel":"1","uses":["Fertilizantes de potasio para la agricultura.","Nutriente esencial para el funcionamiento de nervios y músculos."]},{"number":20,"symbol":"Ca","name":"Calcio","mass":"40.0784","category":"cat-alkaline-earth","categoryLabel":"Metal alcalinotérreo","period":4,"group":2,"xpos":2,"ypos":4,"phase":"Sólido","electronConfig":"[Ar] 4s2","shells":[2,8,8,2],"shellsLabel":"2, 8, 8, 2","valenceElectrons":2,"boilLabel":"1483.8 °C","meltLabel":"841.9 °C","densityLabel":"1.55 g/cm³","origin":"Del latín 'calx' (cal), el material de construcción del que se extrajo por primera vez.","oxidationStates":[2],"oxidationLabel":"+2","valencesLabel":"2","uses":["Huesos y dientes; suplemento en lácteos.","Cemento y cal para la construcción."]},{"number":21,"symbol":"Sc","name":"Escandio","mass":"44.9559","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":4,"group":3,"xpos":3,"ypos":4,"phase":"Sólido","electronConfig":"[Ar] 3d1 4s2","shells":[2,8,9,2],"shellsLabel":"2, 8, 9, 2","valenceElectrons":2,"boilLabel":"2835.8 °C","meltLabel":"1540.8 °C","densityLabel":"2.985 g/cm³","origin":"De Scandia, nombre latino de Escandinavia, región donde se descubrió su mineral.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Aleaciones de aluminio-escandio para bicicletas y equipo deportivo de alto rendimiento.","Lámparas de haluro metálico."]},{"number":22,"symbol":"Ti","name":"Titanio","mass":"47.8671","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":4,"group":4,"xpos":4,"ypos":4,"phase":"Sólido","electronConfig":"[Ar] 3d2 4s2","shells":[2,8,10,2],"shellsLabel":"2, 8, 10, 2","valenceElectrons":2,"boilLabel":"3286.8 °C","meltLabel":"1667.8 °C","densityLabel":"4.506 g/cm³","origin":"De los Titanes de la mitología griega, por sugerencia de Martin Klaproth en 1795.","oxidationStates":[2,3,4],"oxidationLabel":"+2, +3, +4","valencesLabel":"2, 3, 4","uses":["Aleaciones muy resistentes y ligeras para implantes médicos y estructuras aeroespaciales.","Pigmento blanco (dióxido de titanio) en pinturas, plásticos y protector solar."]},{"number":23,"symbol":"V","name":"Vanadio","mass":"50.9415","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":4,"group":5,"xpos":5,"ypos":4,"phase":"Sólido","electronConfig":"[Ar] 3d3 4s2","shells":[2,8,11,2],"shellsLabel":"2, 8, 11, 2","valenceElectrons":2,"boilLabel":"3406.8 °C","meltLabel":"1909.8 °C","densityLabel":"6 g/cm³","origin":"De Vanadis, diosa de la belleza en la mitología nórdica, por los coloridos compuestos que forma.","oxidationStates":[2,3,4,5],"oxidationLabel":"+2, +3, +4, +5","valencesLabel":"2, 3, 4, 5","uses":["Aleaciones de acero para herramientas y resortes, por aumentar su resistencia.","Componente de baterías de flujo redox."]},{"number":24,"symbol":"Cr","name":"Cromo","mass":"51.9962","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":4,"group":6,"xpos":6,"ypos":4,"phase":"Sólido","electronConfig":"[Ar] 3d5 4s1","shells":[2,8,13,1],"shellsLabel":"2, 8, 13, 1","valenceElectrons":1,"boilLabel":"2670.8 °C","meltLabel":"1906.8 °C","densityLabel":"7.19 g/cm³","origin":"Del griego 'chroma' (color), por los vivos colores de sus compuestos.","oxidationStates":[2,3,6],"oxidationLabel":"+2, +3, +6","valencesLabel":"2, 3, 6","uses":["Acero inoxidable y cromado decorativo/anticorrosivo.","Pigmentos verdes y amarillos."]},{"number":25,"symbol":"Mn","name":"Manganeso","mass":"54.938","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":4,"group":7,"xpos":7,"ypos":4,"phase":"Sólido","electronConfig":"[Ar] 3d5 4s2","shells":[2,8,13,2],"shellsLabel":"2, 8, 13, 2","valenceElectrons":2,"boilLabel":"2060.8 °C","meltLabel":"1245.8 °C","densityLabel":"7.21 g/cm³","origin":"Del latín 'magnes' (imán), confundido originalmente con minerales de magnetita.","oxidationStates":[2,3,4,6,7],"oxidationLabel":"+2, +3, +4, +6, +7","valencesLabel":"2, 3, 4, 6, 7","uses":["Aleación con hierro (ferromanganeso) para endurecer el acero.","Baterías alcalinas, como componente del dióxido de manganeso."]},{"number":26,"symbol":"Fe","name":"Hierro","mass":"55.8452","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":4,"group":8,"xpos":8,"ypos":4,"phase":"Sólido","electronConfig":"[Ar] 3d6 4s2","shells":[2,8,14,2],"shellsLabel":"2, 8, 14, 2","valenceElectrons":2,"boilLabel":"2860.8 °C","meltLabel":"1537.8 °C","densityLabel":"7.874 g/cm³","origin":"Del latín 'ferrum'; su nombre en español viene del latín 'ferrum' a través del antiguo 'fierro'.","oxidationStates":[2,3,6],"oxidationLabel":"+2, +3, +6","valencesLabel":"2, 3, 6","uses":["Base del acero, el material estructural más usado en construcción e industria.","Hemoglobina de la sangre, para transportar oxígeno en el cuerpo."]},{"number":27,"symbol":"Co","name":"Cobalto","mass":"58.9332","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":4,"group":9,"xpos":9,"ypos":4,"phase":"Sólido","electronConfig":"[Ar] 3d7 4s2","shells":[2,8,15,2],"shellsLabel":"2, 8, 15, 2","valenceElectrons":2,"boilLabel":"2926.8 °C","meltLabel":"1494.8 °C","densityLabel":"8.9 g/cm³","origin":"Del alemán 'Kobold' (duende, espíritu de las minas), porque los mineros creían que sus minerales estaban embrujados.","oxidationStates":[2,3],"oxidationLabel":"+2, +3","valencesLabel":"2, 3","uses":["Imanes muy potentes (alnico y de tierras raras) y aleaciones resistentes al calor.","Vitamina B12 y pigmento azul cobalto."]},{"number":28,"symbol":"Ni","name":"Níquel","mass":"58.6934","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":4,"group":10,"xpos":10,"ypos":4,"phase":"Sólido","electronConfig":"[Ar] 3d8 4s2","shells":[2,8,16,2],"shellsLabel":"2, 8, 16, 2","valenceElectrons":2,"boilLabel":"2729.8 °C","meltLabel":"1454.8 °C","densityLabel":"8.908 g/cm³","origin":"Del alemán 'Kupfernickel' ('cobre del diablo'), un mineral que parecía cobre pero no lo era.","oxidationStates":[2,3],"oxidationLabel":"+2, +3","valencesLabel":"2, 3","uses":["Acero inoxidable y baterías recargables (níquel-metal hidruro).","Monedas y aleaciones resistentes a la corrosión."]},{"number":29,"symbol":"Cu","name":"Cobre","mass":"63.5463","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":4,"group":11,"xpos":11,"ypos":4,"phase":"Sólido","electronConfig":"[Ar] 3d10 4s1","shells":[2,8,18,1],"shellsLabel":"2, 8, 18, 1","valenceElectrons":1,"boilLabel":"2561.8 °C","meltLabel":"1084.6 °C","densityLabel":"8.96 g/cm³","origin":"Del latín 'cuprum', por la isla de Chipre (Cyprus), gran fuente de cobre en la Antigüedad.","oxidationStates":[1,2],"oxidationLabel":"+1, +2","valencesLabel":"1, 2","uses":["Cableado eléctrico, por su excelente conductividad.","Tuberías de plomería y aleaciones como el bronce y el latón."]},{"number":30,"symbol":"Zn","name":"Zinc","mass":"65.382","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":4,"group":12,"xpos":12,"ypos":4,"phase":"Sólido","electronConfig":"[Ar] 3d10 4s2","shells":[2,8,18,2],"shellsLabel":"2, 8, 18, 2","valenceElectrons":2,"boilLabel":"906.9 °C","meltLabel":"419.5 °C","densityLabel":"7.14 g/cm³","origin":"Del alemán 'Zink', de origen incierto; se conoce y se alea desde hace siglos (como en el latón).","oxidationStates":[2],"oxidationLabel":"+2","valencesLabel":"2","uses":["Galvanizado del acero para evitar la corrosión.","Pilas alcalinas y suplemento mineral esencial."]},{"number":31,"symbol":"Ga","name":"Galio","mass":"69.7231","category":"cat-post-transition","categoryLabel":"Otro metal (post-transición)","period":4,"group":13,"xpos":13,"ypos":4,"phase":"Sólido","electronConfig":"[Ar] 3d10 4s2 4p1","shells":[2,8,18,3],"shellsLabel":"2, 8, 18, 3","valenceElectrons":3,"boilLabel":"2399.8 °C","meltLabel":"29.8 °C","densityLabel":"5.91 g/cm³","origin":"De 'Gallia', nombre latino de Francia, en honor al país de su descubridor, Lecoq de Boisbaudran.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["LED y semiconductores de alta velocidad (arseniuro de galio).","Termómetros de reemplazo del mercurio, por fundirse casi a temperatura ambiente."]},{"number":32,"symbol":"Ge","name":"Germanio","mass":"72.6308","category":"cat-metalloid","categoryLabel":"Metaloide","period":4,"group":14,"xpos":14,"ypos":4,"phase":"Sólido","electronConfig":"[Ar] 3d10 4s2 4p2","shells":[2,8,18,4],"shellsLabel":"2, 8, 18, 4","valenceElectrons":4,"boilLabel":"2832.8 °C","meltLabel":"938.3 °C","densityLabel":"5.323 g/cm³","origin":"De 'Germania', nombre latino de Alemania, en honor al país de su descubridor, Clemens Winkler.","oxidationStates":[-4,2,4],"oxidationLabel":"-4, +2, +4","valencesLabel":"2, 4","uses":["Fibra óptica y lentes de cámaras infrarrojas.","Transistores y semiconductores de alta frecuencia."]},{"number":33,"symbol":"As","name":"Arsénico","mass":"74.9216","category":"cat-metalloid","categoryLabel":"Metaloide","period":4,"group":15,"xpos":15,"ypos":4,"phase":"Sólido","electronConfig":"[Ar] 3d10 4s2 4p3","shells":[2,8,18,5],"shellsLabel":"2, 8, 18, 5","valenceElectrons":5,"boilLabel":"No determinado","meltLabel":"No determinado","densityLabel":"5.727 g/cm³","origin":"Del griego 'arsenikon', y este del persa, nombre antiguo del oropimente, un mineral de arsénico.","oxidationStates":[-3,3,5],"oxidationLabel":"-3, +3, +5","valencesLabel":"3, 5","uses":["Semiconductores (arseniuro de galio) para LED y celdas solares.","Históricamente usado en pesticidas, hoy muy restringido por su toxicidad."]},{"number":34,"symbol":"Se","name":"Selenio","mass":"78.9718","category":"cat-nonmetal","categoryLabel":"No metal","period":4,"group":16,"xpos":16,"ypos":4,"phase":"Sólido","electronConfig":"[Ar] 3d10 4s2 4p4","shells":[2,8,18,6],"shellsLabel":"2, 8, 18, 6","valenceElectrons":6,"boilLabel":"684.9 °C","meltLabel":"220.9 °C","densityLabel":"4.81 g/cm³","origin":"Del griego 'selene' (Luna), en contraste con el telurio (nombrado por la Tierra), por descubrirse cerca en el tiempo.","oxidationStates":[-2,4,6],"oxidationLabel":"-2, +4, +6","valencesLabel":"2, 4, 6","uses":["Celdas solares y fotocopiadoras (fotoconductividad).","Suplemento nutricional esencial en pequeñas cantidades."]},{"number":35,"symbol":"Br","name":"Bromo","mass":"79.904","category":"cat-halogen","categoryLabel":"Halógeno","period":4,"group":17,"xpos":17,"ypos":4,"phase":"Líquido","electronConfig":"[Ar] 3d10 4s2 4p5","shells":[2,8,18,7],"shellsLabel":"2, 8, 18, 7","valenceElectrons":7,"boilLabel":"58.9 °C","meltLabel":"-7.3 °C","densityLabel":"3.1028 g/cm³","origin":"Del griego 'bromos' (hedor), por el fuerte y desagradable olor de este elemento.","oxidationStates":[-1,1,3,5],"oxidationLabel":"-1, +1, +3, +5","valencesLabel":"1, 3, 5","uses":["Retardantes de flama para plásticos y textiles.","Purificación del agua de albercas."]},{"number":36,"symbol":"Kr","name":"Kriptón","mass":"83.7982","category":"cat-noble-gas","categoryLabel":"Gas noble","period":4,"group":18,"xpos":18,"ypos":4,"phase":"Gas","electronConfig":"[Ar] 3d10 4s2 4p6","shells":[2,8,18,8],"shellsLabel":"2, 8, 18, 8","valenceElectrons":8,"boilLabel":"-153.2 °C","meltLabel":"-157.4 °C","densityLabel":"3.749 g/L","origin":"Del griego 'kryptos' (oculto), por lo difícil que resultó aislarlo del aire.","oxidationStates":[2],"oxidationLabel":"+2","valencesLabel":"2","uses":["Relleno de focos y ventanas de alta eficiencia energética.","Iluminación de faros de automóviles de alta intensidad."]},{"number":37,"symbol":"Rb","name":"Rubidio","mass":"85.4678","category":"cat-alkali-metal","categoryLabel":"Metal alcalino","period":5,"group":1,"xpos":1,"ypos":5,"phase":"Sólido","electronConfig":"[Kr] 5s1","shells":[2,8,18,8,1],"shellsLabel":"2, 8, 18, 8, 1","valenceElectrons":1,"boilLabel":"687.9 °C","meltLabel":"39.3 °C","densityLabel":"1.532 g/cm³","origin":"Del latín 'rubidus' (rojo intenso), por el color de las líneas que produce en un espectroscopio.","oxidationStates":[1],"oxidationLabel":"+1","valencesLabel":"1","uses":["Relojes atómicos y estudios de física cuántica (átomos ultrafríos).","Fuegos artificiales, por su color violeta."]},{"number":38,"symbol":"Sr","name":"Estroncio","mass":"87.621","category":"cat-alkaline-earth","categoryLabel":"Metal alcalinotérreo","period":5,"group":2,"xpos":2,"ypos":5,"phase":"Sólido","electronConfig":"[Kr] 5s2","shells":[2,8,18,8,2],"shellsLabel":"2, 8, 18, 8, 2","valenceElectrons":2,"boilLabel":"1376.8 °C","meltLabel":"776.9 °C","densityLabel":"2.64 g/cm³","origin":"De Strontian, un pueblo de Escocia donde se encontró el mineral del que se aisló por primera vez.","oxidationStates":[2],"oxidationLabel":"+2","valencesLabel":"2","uses":["Fuegos artificiales, por el intenso color rojo que produce al arder.","Pantallas de tubos de rayos catódicos antiguos, como blindaje de radiación."]},{"number":39,"symbol":"Y","name":"Itrio","mass":"88.9058","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":5,"group":3,"xpos":3,"ypos":5,"phase":"Sólido","electronConfig":"[Kr] 4d1 5s2","shells":[2,8,18,9,2],"shellsLabel":"2, 8, 18, 9, 2","valenceElectrons":2,"boilLabel":"2929.8 °C","meltLabel":"1525.8 °C","densityLabel":"4.472 g/cm³","origin":"De Ytterby, un pueblo de Suecia cerca del cual se descubrieron varios elementos de tierras raras.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Fósforos rojos de pantallas y LED.","Superconductores cerámicos y bujías de motores."]},{"number":40,"symbol":"Zr","name":"Zirconio","mass":"91.2242","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":5,"group":4,"xpos":4,"ypos":5,"phase":"Sólido","electronConfig":"[Kr] 4d2 5s2","shells":[2,8,18,10,2],"shellsLabel":"2, 8, 18, 10, 2","valenceElectrons":2,"boilLabel":"4376.9 °C","meltLabel":"1854.8 °C","densityLabel":"6.52 g/cm³","origin":"Del árabe 'zarqun' o del persa 'zargun' (dorado), nombre del mineral circón del que se extrae.","oxidationStates":[4],"oxidationLabel":"+4","valencesLabel":"4","uses":["Revestimiento de las barras de combustible en reactores nucleares, por ser casi transparente a los neutrones.","Bisutería (circonita cúbica) como imitación de diamante."]},{"number":41,"symbol":"Nb","name":"Niobio","mass":"92.9064","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":5,"group":5,"xpos":5,"ypos":5,"phase":"Sólido","electronConfig":"[Kr] 4d4 5s1","shells":[2,8,18,12,1],"shellsLabel":"2, 8, 18, 12, 1","valenceElectrons":1,"boilLabel":"4743.9 °C","meltLabel":"2476.8 °C","densityLabel":"8.57 g/cm³","origin":"De Níobe, hija de Tántalo en la mitología griega, por su parecido químico con el tantalio.","oxidationStates":[3,5],"oxidationLabel":"+3, +5","valencesLabel":"3, 5","uses":["Imanes superconductores, como los de los aceleradores de partículas.","Aleaciones especiales para tuberías de gas de alta resistencia."]},{"number":42,"symbol":"Mo","name":"Molibdeno","mass":"95.951","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":5,"group":6,"xpos":6,"ypos":5,"phase":"Sólido","electronConfig":"[Kr] 4d5 5s1","shells":[2,8,18,13,1],"shellsLabel":"2, 8, 18, 13, 1","valenceElectrons":1,"boilLabel":"4638.9 °C","meltLabel":"2622.8 °C","densityLabel":"10.28 g/cm³","origin":"Del griego 'molybdos' (plomo), porque su mineral se confundía antiguamente con minerales de plomo.","oxidationStates":[2,3,4,5,6],"oxidationLabel":"+2, +3, +4, +5, +6","valencesLabel":"2, 3, 4, 5, 6","uses":["Aleaciones de acero de alta resistencia para herramientas y motores de aviones.","Catalizadores en refinación de petróleo."]},{"number":43,"symbol":"Tc","name":"Tecnecio","mass":"98","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":5,"group":7,"xpos":7,"ypos":5,"phase":"Sólido","electronConfig":"[Kr] 4d5 5s2","shells":[2,8,18,13,2],"shellsLabel":"2, 8, 18, 13, 2","valenceElectrons":2,"boilLabel":"4264.9 °C","meltLabel":"2156.8 °C","densityLabel":"11 g/cm³","origin":"Del griego 'technetos' (artificial): fue el primer elemento producido artificialmente, en 1937.","oxidationStates":[4,6,7],"oxidationLabel":"+4, +6, +7","valencesLabel":"4, 6, 7","uses":["Tecnecio-99m: el isótopo radiactivo más usado en medicina nuclear para estudios de imagen.","No existe en la naturaleza en cantidades significativas; se obtiene de reactores nucleares."]},{"number":44,"symbol":"Ru","name":"Rutenio","mass":"101.072","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":5,"group":8,"xpos":8,"ypos":5,"phase":"Sólido","electronConfig":"[Kr] 4d7 5s1","shells":[2,8,18,15,1],"shellsLabel":"2, 8, 18, 15, 1","valenceElectrons":1,"boilLabel":"4149.9 °C","meltLabel":"2333.8 °C","densityLabel":"12.45 g/cm³","origin":"De 'Ruthenia', nombre latino de Rusia, país donde se descubrió su mineral.","oxidationStates":[2,3,4,6,8],"oxidationLabel":"+2, +3, +4, +6, +8","valencesLabel":"2, 3, 4, 6, 8","uses":["Contactos eléctricos resistentes al desgaste.","Catalizador en la industria química y electrodos de celdas solares."]},{"number":45,"symbol":"Rh","name":"Rodio","mass":"102.906","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":5,"group":9,"xpos":9,"ypos":5,"phase":"Sólido","electronConfig":"[Kr] 4d8 5s1","shells":[2,8,18,16,1],"shellsLabel":"2, 8, 18, 16, 1","valenceElectrons":1,"boilLabel":"3694.8 °C","meltLabel":"1963.8 °C","densityLabel":"12.41 g/cm³","origin":"Del griego 'rhodon' (rosa), por el color rosado de sus sales en disolución.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Convertidores catalíticos de automóviles, para reducir emisiones contaminantes.","Recubrimientos reflectantes para espejos e instrumentos ópticos."]},{"number":46,"symbol":"Pd","name":"Paladio","mass":"106.421","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":5,"group":10,"xpos":10,"ypos":5,"phase":"Sólido","electronConfig":"[Kr] 4d10","shells":[2,8,18,18],"shellsLabel":"2, 8, 18, 18","valenceElectrons":18,"boilLabel":"2962.8 °C","meltLabel":"1554.9 °C","densityLabel":"12.023 g/cm³","origin":"Del asteroide Palas, descubierto casi al mismo tiempo que el elemento, en 1803.","oxidationStates":[2,4],"oxidationLabel":"+2, +4","valencesLabel":"2, 4","uses":["Convertidores catalíticos de automóviles.","Electrodos y contactos eléctricos en electrónica."]},{"number":47,"symbol":"Ag","name":"Plata","mass":"107.868","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":5,"group":11,"xpos":11,"ypos":5,"phase":"Sólido","electronConfig":"[Kr] 4d10 5s1","shells":[2,8,18,18,1],"shellsLabel":"2, 8, 18, 18, 1","valenceElectrons":1,"boilLabel":"2161.8 °C","meltLabel":"961.8 °C","densityLabel":"10.49 g/cm³","origin":"Del latín 'argentum'; se conoce y se trabaja como metal precioso desde la Antigüedad.","oxidationStates":[1],"oxidationLabel":"+1","valencesLabel":"1","uses":["Joyería y cubiertos de plata.","Contactos eléctricos y, en compuestos, película fotográfica y agente antibacteriano."]},{"number":48,"symbol":"Cd","name":"Cadmio","mass":"112.414","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":5,"group":12,"xpos":12,"ypos":5,"phase":"Sólido","electronConfig":"[Kr] 4d10 5s2","shells":[2,8,18,18,2],"shellsLabel":"2, 8, 18, 18, 2","valenceElectrons":2,"boilLabel":"766.9 °C","meltLabel":"321.1 °C","densityLabel":"8.65 g/cm³","origin":"Del latín 'cadmia', antiguo nombre de un mineral de zinc junto al que se encuentra.","oxidationStates":[2],"oxidationLabel":"+2","valencesLabel":"2","uses":["Baterías recargables níquel-cadmio.","Barras de control en reactores nucleares, por absorber neutrones."]},{"number":49,"symbol":"In","name":"Indio","mass":"114.818","category":"cat-post-transition","categoryLabel":"Otro metal (post-transición)","period":5,"group":13,"xpos":13,"ypos":5,"phase":"Sólido","electronConfig":"[Kr] 4d10 5s2 5p1","shells":[2,8,18,18,3],"shellsLabel":"2, 8, 18, 18, 3","valenceElectrons":3,"boilLabel":"2071.8 °C","meltLabel":"156.6 °C","densityLabel":"7.31 g/cm³","origin":"Del color índigo de la línea que produce en su espectro, por la que fue descubierto en 1863.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Óxido de indio y estaño (ITO) en pantallas táctiles y de cristal líquido.","Soldaduras de bajo punto de fusión."]},{"number":50,"symbol":"Sn","name":"Estaño","mass":"118.711","category":"cat-post-transition","categoryLabel":"Otro metal (post-transición)","period":5,"group":14,"xpos":14,"ypos":5,"phase":"Sólido","electronConfig":"[Kr] 4d10 5s2 5p2","shells":[2,8,18,18,4],"shellsLabel":"2, 8, 18, 18, 4","valenceElectrons":4,"boilLabel":"2601.8 °C","meltLabel":"231.9 °C","densityLabel":"7.365 g/cm³","origin":"Del latín 'stannum'; se conoce y se usa desde la Antigüedad, sobre todo aleado en el bronce.","oxidationStates":[2,4],"oxidationLabel":"+2, +4","valencesLabel":"2, 4","uses":["Recubrimiento antioxidante de latas de conserva ('hojalata').","Soldadura electrónica y aleación con cobre para hacer bronce."]},{"number":51,"symbol":"Sb","name":"Antimonio","mass":"121.76","category":"cat-metalloid","categoryLabel":"Metaloide","period":5,"group":15,"xpos":15,"ypos":5,"phase":"Sólido","electronConfig":"[Kr] 4d10 5s2 5p3","shells":[2,8,18,18,5],"shellsLabel":"2, 8, 18, 18, 5","valenceElectrons":5,"boilLabel":"1634.8 °C","meltLabel":"630.6 °C","densityLabel":"6.697 g/cm³","origin":"Del latín 'antimonium', de origen incierto; se conoce desde la Antigüedad (su símbolo Sb viene de 'stibium').","oxidationStates":[-3,3,5],"oxidationLabel":"-3, +3, +5","valencesLabel":"3, 5","uses":["Retardantes de flama en textiles y plásticos.","Aleación con plomo para las placas de baterías de auto."]},{"number":52,"symbol":"Te","name":"Teluro","mass":"127.603","category":"cat-metalloid","categoryLabel":"Metaloide","period":5,"group":16,"xpos":16,"ypos":5,"phase":"Sólido","electronConfig":"[Kr] 4d10 5s2 5p4","shells":[2,8,18,18,6],"shellsLabel":"2, 8, 18, 18, 6","valenceElectrons":6,"boilLabel":"987.9 °C","meltLabel":"449.5 °C","densityLabel":"6.24 g/cm³","origin":"Del latín 'tellus' (Tierra), nombrado así por Franz-Joseph Müller von Reichenstein en 1798.","oxidationStates":[-2,2,4,6],"oxidationLabel":"-2, +2, +4, +6","valencesLabel":"2, 4, 6","uses":["Celdas solares de película delgada (telururo de cadmio).","Aditivo para endurecer aleaciones de acero y cobre."]},{"number":53,"symbol":"I","name":"Yodo","mass":"126.904","category":"cat-halogen","categoryLabel":"Halógeno","period":5,"group":17,"xpos":17,"ypos":5,"phase":"Sólido","electronConfig":"[Kr] 4d10 5s2 5p5","shells":[2,8,18,18,7],"shellsLabel":"2, 8, 18, 18, 7","valenceElectrons":7,"boilLabel":"184.2 °C","meltLabel":"113.7 °C","densityLabel":"4.933 g/cm³","origin":"Del griego 'iodes' (violeta), por el color violeta intenso de su vapor.","oxidationStates":[-1,1,3,5,7],"oxidationLabel":"-1, +1, +3, +5, +7","valencesLabel":"1, 3, 5, 7","uses":["Yodo en tinturas antisépticas para heridas.","Sal yodada, para prevenir problemas de tiroides."]},{"number":54,"symbol":"Xe","name":"Xenón","mass":"131.294","category":"cat-noble-gas","categoryLabel":"Gas noble","period":5,"group":18,"xpos":18,"ypos":5,"phase":"Gas","electronConfig":"[Kr] 4d10 5s2 5p6","shells":[2,8,18,18,8],"shellsLabel":"2, 8, 18, 18, 8","valenceElectrons":8,"boilLabel":"-108.1 °C","meltLabel":"-111.7 °C","densityLabel":"5.894 g/L","origin":"Del griego 'xenos' (extraño, extranjero), por lo poco común que resultó su descubrimiento.","oxidationStates":[2,4,6],"oxidationLabel":"+2, +4, +6","valencesLabel":"2, 4, 6","uses":["Faros de automóviles y lámparas de descarga de alta intensidad.","Propulsión de satélites mediante motores de iones."]},{"number":55,"symbol":"Cs","name":"Cesio","mass":"132.905","category":"cat-alkali-metal","categoryLabel":"Metal alcalino","period":6,"group":1,"xpos":1,"ypos":6,"phase":"Sólido","electronConfig":"[Xe] 6s1","shells":[2,8,18,18,8,1],"shellsLabel":"2, 8, 18, 18, 8, 1","valenceElectrons":1,"boilLabel":"670.9 °C","meltLabel":"28.6 °C","densityLabel":"1.93 g/cm³","origin":"Del latín 'caesius' (azul cielo), por el color de las líneas que produce en un espectroscopio.","oxidationStates":[1],"oxidationLabel":"+1","valencesLabel":"1","uses":["Relojes atómicos de cesio, base de la definición internacional del segundo.","Fluidos de perforación en la extracción de petróleo."]},{"number":56,"symbol":"Ba","name":"Bario","mass":"137.328","category":"cat-alkaline-earth","categoryLabel":"Metal alcalinotérreo","period":6,"group":2,"xpos":2,"ypos":6,"phase":"Sólido","electronConfig":"[Xe] 6s2","shells":[2,8,18,18,8,2],"shellsLabel":"2, 8, 18, 18, 8, 2","valenceElectrons":2,"boilLabel":"1844.8 °C","meltLabel":"726.9 °C","densityLabel":"3.51 g/cm³","origin":"Del griego 'barys' (pesado), por la alta densidad de sus minerales.","oxidationStates":[2],"oxidationLabel":"+2","valencesLabel":"2","uses":["Fuegos artificiales, por su color verde brillante.","Sulfato de bario como medio de contraste en radiografías del sistema digestivo."]},{"number":57,"symbol":"La","name":"Lantano","mass":"138.905","category":"cat-lanthanide","categoryLabel":"Lantánido","period":6,"group":3,"xpos":3,"ypos":9,"phase":"Sólido","electronConfig":"[Xe] 5d1 6s2","shells":[2,8,18,18,9,2],"shellsLabel":"2, 8, 18, 18, 9, 2","valenceElectrons":2,"boilLabel":"3463.8 °C","meltLabel":"919.9 °C","densityLabel":"6.162 g/cm³","origin":"Del griego 'lanthanein' (permanecer oculto), porque tardó en distinguirse de otros elementos similares.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Baterías de níquel-hidruro metálico de autos híbridos.","Lentes de cámaras de alta calidad, por su alto índice de refracción."]},{"number":58,"symbol":"Ce","name":"Cerio","mass":"140.116","category":"cat-lanthanide","categoryLabel":"Lantánido","period":6,"group":3,"xpos":4,"ypos":9,"phase":"Sólido","electronConfig":"[Xe] 4f1 5d1 6s2","shells":[2,8,18,19,9,2],"shellsLabel":"2, 8, 18, 19, 9, 2","valenceElectrons":2,"boilLabel":"3442.8 °C","meltLabel":"794.9 °C","densityLabel":"6.77 g/cm³","origin":"Por el asteroide Ceres, descubierto poco antes que el elemento, en 1803.","oxidationStates":[3,4],"oxidationLabel":"+3, +4","valencesLabel":"3, 4","uses":["Piedras de encendedores ('piedra de mechero') en aleación con hierro.","Pulido de vidrio y lentes ópticas."]},{"number":59,"symbol":"Pr","name":"Praseodimio","mass":"140.908","category":"cat-lanthanide","categoryLabel":"Lantánido","period":6,"group":3,"xpos":5,"ypos":9,"phase":"Sólido","electronConfig":"[Xe] 4f3 6s2","shells":[2,8,18,21,8,2],"shellsLabel":"2, 8, 18, 21, 8, 2","valenceElectrons":2,"boilLabel":"3129.8 °C","meltLabel":"934.9 °C","densityLabel":"6.77 g/cm³","origin":"Del griego 'prasios didymos' ('gemelo verde'), por el color de sus sales y su parecido con el neodimio.","oxidationStates":[3,4],"oxidationLabel":"+3, +4","valencesLabel":"3, 4","uses":["Imanes permanentes de alto rendimiento junto con neodimio.","Vidrios y esmaltes de color amarillo."]},{"number":60,"symbol":"Nd","name":"Neodimio","mass":"144.242","category":"cat-lanthanide","categoryLabel":"Lantánido","period":6,"group":3,"xpos":6,"ypos":9,"phase":"Sólido","electronConfig":"[Xe] 4f4 6s2","shells":[2,8,18,22,8,2],"shellsLabel":"2, 8, 18, 22, 8, 2","valenceElectrons":2,"boilLabel":"3073.8 °C","meltLabel":"1023.9 °C","densityLabel":"7.01 g/cm³","origin":"Del griego 'neos didymos' ('nuevo gemelo'), al separarse del que se creía un solo elemento, el 'didimio'.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Imanes de neodimio, los más potentes que existen, usados en audífonos, discos duros y motores eléctricos.","Láseres industriales y de uso médico."]},{"number":61,"symbol":"Pm","name":"Prometio","mass":"145","category":"cat-lanthanide","categoryLabel":"Lantánido","period":6,"group":3,"xpos":7,"ypos":9,"phase":"Sólido","electronConfig":"[Xe] 4f5 6s2","shells":[2,8,18,23,8,2],"shellsLabel":"2, 8, 18, 23, 8, 2","valenceElectrons":2,"boilLabel":"2999.8 °C","meltLabel":"1041.8 °C","densityLabel":"7.26 g/cm³","origin":"De Prometeo, el titán griego que robó el fuego para dárselo a la humanidad.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Pintura luminiscente para carátulas e instrumentos.","Baterías nucleares de larga duración (betavoltaicas) para equipos espaciales."]},{"number":62,"symbol":"Sm","name":"Samario","mass":"150.362","category":"cat-lanthanide","categoryLabel":"Lantánido","period":6,"group":3,"xpos":8,"ypos":9,"phase":"Sólido","electronConfig":"[Xe] 4f6 6s2","shells":[2,8,18,24,8,2],"shellsLabel":"2, 8, 18, 24, 8, 2","valenceElectrons":2,"boilLabel":"1899.8 °C","meltLabel":"1071.8 °C","densityLabel":"7.52 g/cm³","origin":"Del mineral samarskita, nombrado a su vez en honor al ingeniero de minas ruso Vasili Samarsky-Bykhovets.","oxidationStates":[2,3],"oxidationLabel":"+2, +3","valencesLabel":"2, 3","uses":["Imanes samario-cobalto, resistentes a altas temperaturas.","Barras de control en reactores nucleares."]},{"number":63,"symbol":"Eu","name":"Europio","mass":"151.964","category":"cat-lanthanide","categoryLabel":"Lantánido","period":6,"group":3,"xpos":9,"ypos":9,"phase":"Sólido","electronConfig":"[Xe] 4f7 6s2","shells":[2,8,18,25,8,2],"shellsLabel":"2, 8, 18, 25, 8, 2","valenceElectrons":2,"boilLabel":"1528.8 °C","meltLabel":"825.9 °C","densityLabel":"5.264 g/cm³","origin":"Del continente europeo, nombre propuesto por el químico francés Eugène-Anatole Demarçay.","oxidationStates":[2,3],"oxidationLabel":"+2, +3","valencesLabel":"2, 3","uses":["Fósforo rojo y azul en pantallas y focos fluorescentes.","Marcas de seguridad fluorescentes en billetes, para dificultar su falsificación."]},{"number":64,"symbol":"Gd","name":"Gadolinio","mass":"157.253","category":"cat-lanthanide","categoryLabel":"Lantánido","period":6,"group":3,"xpos":10,"ypos":9,"phase":"Sólido","electronConfig":"[Xe] 4f7 5d1 6s2","shells":[2,8,18,25,9,2],"shellsLabel":"2, 8, 18, 25, 9, 2","valenceElectrons":2,"boilLabel":"2999.8 °C","meltLabel":"1311.8 °C","densityLabel":"7.9 g/cm³","origin":"En honor a Johan Gadolin, químico finlandés pionero en el estudio de las tierras raras.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Medio de contraste en estudios de resonancia magnética.","Componente de memorias de computadora y detectores de radiación."]},{"number":65,"symbol":"Tb","name":"Terbio","mass":"158.925","category":"cat-lanthanide","categoryLabel":"Lantánido","period":6,"group":3,"xpos":11,"ypos":9,"phase":"Sólido","electronConfig":"[Xe] 4f9 6s2","shells":[2,8,18,27,8,2],"shellsLabel":"2, 8, 18, 27, 8, 2","valenceElectrons":2,"boilLabel":"3122.8 °C","meltLabel":"1355.8 °C","densityLabel":"8.23 g/cm³","origin":"De Ytterby, el mismo pueblo sueco que da nombre al itrio, al iterbio y al erbio.","oxidationStates":[3,4],"oxidationLabel":"+3, +4","valencesLabel":"3, 4","uses":["Fósforos verdes de pantallas y focos ahorradores.","Aleaciones magnetostrictivas para sensores y actuadores."]},{"number":66,"symbol":"Dy","name":"Disprosio","mass":"162.5","category":"cat-lanthanide","categoryLabel":"Lantánido","period":6,"group":3,"xpos":12,"ypos":9,"phase":"Sólido","electronConfig":"[Xe] 4f10 6s2","shells":[2,8,18,28,8,2],"shellsLabel":"2, 8, 18, 28, 8, 2","valenceElectrons":2,"boilLabel":"2566.8 °C","meltLabel":"1406.8 °C","densityLabel":"8.54 g/cm³","origin":"Del griego 'dysprositos' (difícil de obtener), por lo laborioso que fue aislarlo.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Barras de control de reactores nucleares, por absorber neutrones.","Componente de imanes y láseres especializados."]},{"number":67,"symbol":"Ho","name":"Holmio","mass":"164.93","category":"cat-lanthanide","categoryLabel":"Lantánido","period":6,"group":3,"xpos":13,"ypos":9,"phase":"Sólido","electronConfig":"[Xe] 4f11 6s2","shells":[2,8,18,29,8,2],"shellsLabel":"2, 8, 18, 29, 8, 2","valenceElectrons":2,"boilLabel":"2599.8 °C","meltLabel":"1460.8 °C","densityLabel":"8.79 g/cm³","origin":"De Holmia, nombre latino de Estocolmo, ciudad natal de uno de sus descubridores.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Láseres quirúrgicos y dentales.","Componente de algunos imanes de altísima potencia junto con otras tierras raras."]},{"number":68,"symbol":"Er","name":"Erbio","mass":"167.259","category":"cat-lanthanide","categoryLabel":"Lantánido","period":6,"group":3,"xpos":14,"ypos":9,"phase":"Sólido","electronConfig":"[Xe] 4f12 6s2","shells":[2,8,18,30,8,2],"shellsLabel":"2, 8, 18, 30, 8, 2","valenceElectrons":2,"boilLabel":"2867.8 °C","meltLabel":"1528.8 °C","densityLabel":"9.066 g/cm³","origin":"De Ytterby, el pueblo sueco que da nombre a varios elementos de tierras raras.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Amplificadores de fibra óptica para telecomunicaciones.","Colorante rosado para vidrios y esmaltes."]},{"number":69,"symbol":"Tm","name":"Tulio","mass":"168.934","category":"cat-lanthanide","categoryLabel":"Lantánido","period":6,"group":3,"xpos":15,"ypos":9,"phase":"Sólido","electronConfig":"[Xe] 4f13 6s2","shells":[2,8,18,31,8,2],"shellsLabel":"2, 8, 18, 31, 8, 2","valenceElectrons":2,"boilLabel":"1949.8 °C","meltLabel":"1544.8 °C","densityLabel":"9.32 g/cm³","origin":"De Thule, nombre legendario y antiguo de Escandinavia.","oxidationStates":[2,3],"oxidationLabel":"+2, +3","valencesLabel":"2, 3","uses":["Fuente portátil de rayos X para inspección médica e industrial.","Dopante en algunos láseres de estado sólido."]},{"number":70,"symbol":"Yb","name":"Iterbio","mass":"173.045","category":"cat-lanthanide","categoryLabel":"Lantánido","period":6,"group":3,"xpos":16,"ypos":9,"phase":"Sólido","electronConfig":"[Xe] 4f14 6s2","shells":[2,8,18,32,8,2],"shellsLabel":"2, 8, 18, 32, 8, 2","valenceElectrons":2,"boilLabel":"1195.8 °C","meltLabel":"823.9 °C","densityLabel":"6.9 g/cm³","origin":"De Ytterby, el pueblo sueco que da nombre a varios elementos de tierras raras.","oxidationStates":[2,3],"oxidationLabel":"+2, +3","valencesLabel":"2, 3","uses":["Referencia en relojes atómicos de altísima precisión.","Aleaciones especiales y algunas celdas solares experimentales."]},{"number":71,"symbol":"Lu","name":"Lutecio","mass":"174.967","category":"cat-lanthanide","categoryLabel":"Lantánido","period":6,"group":3,"xpos":17,"ypos":9,"phase":"Sólido","electronConfig":"[Xe] 4f14 5d1 6s2","shells":[2,8,18,32,9,2],"shellsLabel":"2, 8, 18, 32, 9, 2","valenceElectrons":2,"boilLabel":"3401.8 °C","meltLabel":"1651.8 °C","densityLabel":"9.841 g/cm³","origin":"De Lutecia, nombre latino de París, ciudad donde trabajaba su descubridor, Georges Urbain.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Catalizador en el refinado de petróleo (craqueo catalítico).","Detectores de centelleo para tomografías por emisión de positrones (PET)."]},{"number":72,"symbol":"Hf","name":"Hafnio","mass":"178.492","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":6,"group":4,"xpos":4,"ypos":6,"phase":"Sólido","electronConfig":"[Xe] 4f14 5d2 6s2","shells":[2,8,18,32,10,2],"shellsLabel":"2, 8, 18, 32, 10, 2","valenceElectrons":2,"boilLabel":"4602.9 °C","meltLabel":"2232.8 °C","densityLabel":"13.31 g/cm³","origin":"De 'Hafnia', nombre latino de Copenhague, ciudad donde se descubrió.","oxidationStates":[4],"oxidationLabel":"+4","valencesLabel":"4","uses":["Barras de control de submarinos nucleares y reactores.","Componente de los transistores más pequeños en chips modernos."]},{"number":73,"symbol":"Ta","name":"Tántalo","mass":"180.948","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":6,"group":5,"xpos":5,"ypos":6,"phase":"Sólido","electronConfig":"[Xe] 4f14 5d3 6s2","shells":[2,8,18,32,11,2],"shellsLabel":"2, 8, 18, 32, 11, 2","valenceElectrons":2,"boilLabel":"5457.9 °C","meltLabel":"3016.8 °C","densityLabel":"16.69 g/cm³","origin":"De Tántalo, personaje de la mitología griega, por lo difícil ('la tentación insaciable') que fue disolver sus óxidos.","oxidationStates":[5],"oxidationLabel":"+5","valencesLabel":"5","uses":["Capacitores electrolíticos de teléfonos y computadoras.","Implantes quirúrgicos, por ser biocompatible."]},{"number":74,"symbol":"W","name":"Wolframio","mass":"183.841","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":6,"group":6,"xpos":6,"ypos":6,"phase":"Sólido","electronConfig":"[Xe] 4f14 5d4 6s2","shells":[2,8,18,32,12,2],"shellsLabel":"2, 8, 18, 32, 12, 2","valenceElectrons":2,"boilLabel":"5929.9 °C","meltLabel":"3421.8 °C","densityLabel":"19.25 g/cm³","origin":"Del sueco 'tung sten' (piedra pesada); su símbolo W viene de 'wolframio', otro nombre tradicional del elemento.","oxidationStates":[2,3,4,5,6],"oxidationLabel":"+2, +3, +4, +5, +6","valencesLabel":"2, 3, 4, 5, 6","uses":["Filamentos de focos incandescentes, por su altísimo punto de fusión.","Puntas de electrodos de soldadura y brocas de alta dureza."]},{"number":75,"symbol":"Re","name":"Renio","mass":"186.207","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":6,"group":7,"xpos":7,"ypos":6,"phase":"Sólido","electronConfig":"[Xe] 4f14 5d5 6s2","shells":[2,8,18,32,13,2],"shellsLabel":"2, 8, 18, 32, 13, 2","valenceElectrons":2,"boilLabel":"5595.9 °C","meltLabel":"3185.8 °C","densityLabel":"21.02 g/cm³","origin":"Del latín 'Rhenus', el río Rin, en honor a la región alemana donde trabajaban sus descubridores.","oxidationStates":[2,4,6,7],"oxidationLabel":"+2, +4, +6, +7","valencesLabel":"2, 4, 6, 7","uses":["Superaleaciones para álabes de turbinas de motores a reacción.","Filamentos de espectrómetros de masas."]},{"number":76,"symbol":"Os","name":"Osmio","mass":"190.233","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":6,"group":8,"xpos":8,"ypos":6,"phase":"Sólido","electronConfig":"[Xe] 4f14 5d6 6s2","shells":[2,8,18,32,14,2],"shellsLabel":"2, 8, 18, 32, 14, 2","valenceElectrons":2,"boilLabel":"5011.9 °C","meltLabel":"3032.8 °C","densityLabel":"22.59 g/cm³","origin":"Del griego 'osme' (olor), por el fuerte olor de uno de sus óxidos.","oxidationStates":[2,3,4,6,8],"oxidationLabel":"+2, +3, +4, +6, +8","valencesLabel":"2, 3, 4, 6, 8","uses":["Puntas de plumas fuente y agujas de tocadiscos, por su extrema dureza.","Aleaciones muy resistentes al desgaste para contactos eléctricos."]},{"number":77,"symbol":"Ir","name":"Iridio","mass":"192.217","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":6,"group":9,"xpos":9,"ypos":6,"phase":"Sólido","electronConfig":"[Xe] 4f14 5d7 6s2","shells":[2,8,18,32,15,2],"shellsLabel":"2, 8, 18, 32, 15, 2","valenceElectrons":2,"boilLabel":"4129.9 °C","meltLabel":"2445.8 °C","densityLabel":"22.56 g/cm³","origin":"Del latín 'iris' (arcoíris), por los vivos e variados colores de sus sales.","oxidationStates":[3,4,6],"oxidationLabel":"+3, +4, +6","valencesLabel":"3, 4, 6","uses":["Bujías de motores de aviación, por resistir temperaturas extremas.","Crisoles para fabricar cristales especiales."]},{"number":78,"symbol":"Pt","name":"Platino","mass":"195.085","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":6,"group":10,"xpos":10,"ypos":6,"phase":"Sólido","electronConfig":"[Xe] 4f14 5d9 6s1","shells":[2,8,18,32,17,1],"shellsLabel":"2, 8, 18, 32, 17, 1","valenceElectrons":1,"boilLabel":"3824.8 °C","meltLabel":"1768.2 °C","densityLabel":"21.45 g/cm³","origin":"Del español 'platina' ('plata pequeña'), nombre que le dieron los conquistadores españoles en Sudamérica.","oxidationStates":[2,4],"oxidationLabel":"+2, +4","valencesLabel":"2, 4","uses":["Joyería fina y convertidores catalíticos de automóviles.","Electrodos e instrumental médico y de laboratorio."]},{"number":79,"symbol":"Au","name":"Oro","mass":"196.967","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":6,"group":11,"xpos":11,"ypos":6,"phase":"Sólido","electronConfig":"[Xe] 4f14 5d10 6s1","shells":[2,8,18,32,18,1],"shellsLabel":"2, 8, 18, 32, 18, 1","valenceElectrons":1,"boilLabel":"2969.8 °C","meltLabel":"1064.2 °C","densityLabel":"19.3 g/cm³","origin":"Del latín 'aurum' ('aurora resplandeciente'); se conoce y se atesora desde la Antigüedad.","oxidationStates":[1,3],"oxidationLabel":"+1, +3","valencesLabel":"1, 3","uses":["Joyería y reservas de valor.","Contactos eléctricos de alta fiabilidad en electrónica de precisión."]},{"number":80,"symbol":"Hg","name":"Mercurio","mass":"200.592","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":6,"group":12,"xpos":12,"ypos":6,"phase":"Líquido","electronConfig":"[Xe] 4f14 5d10 6s2","shells":[2,8,18,32,18,2],"shellsLabel":"2, 8, 18, 32, 18, 2","valenceElectrons":2,"boilLabel":"356.7 °C","meltLabel":"-38.8 °C","densityLabel":"13.534 g/cm³","origin":"Del dios romano Mercurio, por lo rápido y móvil de este metal líquido (su símbolo Hg viene del griego 'hydrargyrum', 'plata líquida').","oxidationStates":[1,2],"oxidationLabel":"+1, +2","valencesLabel":"1, 2","uses":["Termómetros y barómetros tradicionales (hoy muy restringido por su toxicidad).","Lámparas fluorescentes y de vapor de mercurio."]},{"number":81,"symbol":"Tl","name":"Talio","mass":"204.38","category":"cat-post-transition","categoryLabel":"Otro metal (post-transición)","period":6,"group":13,"xpos":13,"ypos":6,"phase":"Sólido","electronConfig":"[Xe] 4f14 5d10 6s2 6p1","shells":[2,8,18,32,18,3],"shellsLabel":"2, 8, 18, 32, 18, 3","valenceElectrons":3,"boilLabel":"1472.8 °C","meltLabel":"303.9 °C","densityLabel":"11.85 g/cm³","origin":"Del griego 'thallos' (brote o rama verde), por la línea verde brillante de su espectro.","oxidationStates":[1,3],"oxidationLabel":"+1, +3","valencesLabel":"1, 3","uses":["Históricamente usado en raticidas, hoy prohibido por su alta toxicidad.","Componente de algunos superconductores y sensores infrarrojos."]},{"number":82,"symbol":"Pb","name":"Plomo","mass":"207.21","category":"cat-post-transition","categoryLabel":"Otro metal (post-transición)","period":6,"group":14,"xpos":14,"ypos":6,"phase":"Sólido","electronConfig":"[Xe] 4f14 5d10 6s2 6p2","shells":[2,8,18,32,18,4],"shellsLabel":"2, 8, 18, 32, 18, 4","valenceElectrons":4,"boilLabel":"1748.8 °C","meltLabel":"327.5 °C","densityLabel":"11.34 g/cm³","origin":"Del latín 'plumbum'; se conoce y se trabaja desde la Antigüedad, por ejemplo en tuberías romanas.","oxidationStates":[2,4],"oxidationLabel":"+2, +4","valencesLabel":"2, 4","uses":["Baterías de plomo-ácido de los automóviles.","Blindaje contra radiación en equipos de rayos X."]},{"number":83,"symbol":"Bi","name":"Bismuto","mass":"208.98","category":"cat-post-transition","categoryLabel":"Otro metal (post-transición)","period":6,"group":15,"xpos":15,"ypos":6,"phase":"Sólido","electronConfig":"[Xe] 4f14 5d10 6s2 6p3","shells":[2,8,18,32,18,5],"shellsLabel":"2, 8, 18, 32, 18, 5","valenceElectrons":5,"boilLabel":"1563.8 °C","meltLabel":"271.6 °C","densityLabel":"9.78 g/cm³","origin":"Del alemán antiguo, de origen incierto; se conocía desde la Edad Media, a veces confundido con el plomo o el estaño.","oxidationStates":[3,5],"oxidationLabel":"+3, +5","valencesLabel":"3, 5","uses":["Sustituto no tóxico del plomo en balas, soldaduras y cosméticos.","Subsalicilato de bismuto, el ingrediente activo de antiácidos como el Pepto-Bismol."]},{"number":84,"symbol":"Po","name":"Polonio","mass":"209","category":"cat-post-transition","categoryLabel":"Otro metal (post-transición)","period":6,"group":16,"xpos":16,"ypos":6,"phase":"Sólido","electronConfig":"[Xe] 4f14 5d10 6s2 6p4","shells":[2,8,18,32,18,6],"shellsLabel":"2, 8, 18, 32, 18, 6","valenceElectrons":6,"boilLabel":"961.9 °C","meltLabel":"253.9 °C","densityLabel":"9.196 g/cm³","origin":"En honor a Polonia, patria de Marie Curie, quien lo descubrió junto con Pierre Curie en 1898.","oxidationStates":[2,4],"oxidationLabel":"+2, +4","valencesLabel":"2, 4","uses":["Eliminadores de electricidad estática en la industria textil y fotográfica.","Fuente de calor en generadores termoeléctricos para naves espaciales (uso histórico)."]},{"number":85,"symbol":"At","name":"Astato","mass":"210","category":"cat-metalloid","categoryLabel":"Metaloide","period":6,"group":17,"xpos":17,"ypos":6,"phase":"Sólido","electronConfig":"[Xe] 4f14 5d10 6s2 6p5","shells":[2,8,18,32,18,7],"shellsLabel":"2, 8, 18, 32, 18, 7","valenceElectrons":7,"boilLabel":"336.9 °C","meltLabel":"301.9 °C","densityLabel":"6.35 g/cm³","origin":"Del griego 'astatos' (inestable), por ser el más inestable de los halógenos naturales.","oxidationStates":[-1,1,3,5],"oxidationLabel":"-1, +1, +3, +5","valencesLabel":"1, 3, 5","uses":["No tiene aplicaciones prácticas: es tan inestable que nunca se ha reunido una cantidad visible a simple vista.","Se estudia en investigación médica como posible tratamiento contra el cáncer (terapia con partículas alfa)."]},{"number":86,"symbol":"Rn","name":"Radón","mass":"222","category":"cat-noble-gas","categoryLabel":"Gas noble","period":6,"group":18,"xpos":18,"ypos":6,"phase":"Gas","electronConfig":"[Xe] 4f14 5d10 6s2 6p6","shells":[2,8,18,32,18,8],"shellsLabel":"2, 8, 18, 32, 18, 8","valenceElectrons":8,"boilLabel":"-61.6 °C","meltLabel":"-71.1 °C","densityLabel":"9.73 g/L","origin":"Por derivar del radio, elemento que al desintegrarse produce este gas.","oxidationStates":[2],"oxidationLabel":"+2","valencesLabel":"2","uses":["Se monitorea en sótanos y minas por ser un gas radiactivo que representa un riesgo para la salud.","Se ha usado experimentalmente para detectar movimientos en fallas geológicas."]},{"number":87,"symbol":"Fr","name":"Francio","mass":"223","category":"cat-alkali-metal","categoryLabel":"Metal alcalino","period":7,"group":1,"xpos":1,"ypos":7,"phase":"Sólido","electronConfig":"[Rn] 7s1","shells":[2,8,18,32,18,8,1],"shellsLabel":"2, 8, 18, 32, 18, 8, 1","valenceElectrons":1,"boilLabel":"676.9 °C","meltLabel":"26.9 °C","densityLabel":"1.87 g/cm³","origin":"En honor a Francia, país donde lo descubrió Marguerite Perey en 1939.","oxidationStates":[1],"oxidationLabel":"+1","valencesLabel":"1","uses":["No tiene ningún uso práctico: es tan radiactivo e inestable que jamás se ha aislado en cantidad visible.","Solo se produce y estudia en pequeñísimas cantidades en laboratorios de física nuclear."]},{"number":88,"symbol":"Ra","name":"Radio","mass":"226","category":"cat-alkaline-earth","categoryLabel":"Metal alcalinotérreo","period":7,"group":2,"xpos":2,"ypos":7,"phase":"Sólido","electronConfig":"[Rn] 7s2","shells":[2,8,18,32,18,8,2],"shellsLabel":"2, 8, 18, 32, 18, 8, 2","valenceElectrons":2,"boilLabel":"1736.8 °C","meltLabel":"959.9 °C","densityLabel":"5.5 g/cm³","origin":"Del latín 'radius' (rayo), por la intensa radiactividad que Marie y Pierre Curie observaron en él.","oxidationStates":[2],"oxidationLabel":"+2","valencesLabel":"2","uses":["Históricamente se usó en pintura luminiscente para relojes y paneles de avión (ya descontinuado por su radiactividad).","Radioterapia temprana contra el cáncer, hoy sustituida por isótopos más seguros."]},{"number":89,"symbol":"Ac","name":"Actinio","mass":"227","category":"cat-actinide","categoryLabel":"Actínido","period":7,"group":3,"xpos":3,"ypos":10,"phase":"Sólido","electronConfig":"[Rn] 6d1 7s2","shells":[2,8,18,32,18,9,2],"shellsLabel":"2, 8, 18, 32, 18, 9, 2","valenceElectrons":2,"boilLabel":"3226.8 °C","meltLabel":"1226.8 °C","densityLabel":"10 g/cm³","origin":"Del griego 'aktinos' (rayo), también por su radiactividad.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Fuente de neutrones para equipos científicos.","No tiene aplicaciones comerciales por su escasez y radiactividad."]},{"number":90,"symbol":"Th","name":"Torio","mass":"232.038","category":"cat-actinide","categoryLabel":"Actínido","period":7,"group":3,"xpos":4,"ypos":10,"phase":"Sólido","electronConfig":"[Rn] 6d2 7s2","shells":[2,8,18,32,18,10,2],"shellsLabel":"2, 8, 18, 32, 18, 10, 2","valenceElectrons":2,"boilLabel":"4787.9 °C","meltLabel":"1749.8 °C","densityLabel":"11.724 g/cm³","origin":"De Thor, el dios nórdico del trueno, nombre propuesto por su descubridor Jöns Jacob Berzelius.","oxidationStates":[4],"oxidationLabel":"+4","valencesLabel":"4","uses":["Manguitos incandescentes de lámparas de gas (uso histórico).","Se investiga como combustible alternativo al uranio en reactores nucleares de nueva generación."]},{"number":91,"symbol":"Pa","name":"Protactinio","mass":"231.036","category":"cat-actinide","categoryLabel":"Actínido","period":7,"group":3,"xpos":5,"ypos":10,"phase":"Sólido","electronConfig":"[Rn] 5f2 6d1 7s2","shells":[2,8,18,32,20,9,2],"shellsLabel":"2, 8, 18, 32, 20, 9, 2","valenceElectrons":2,"boilLabel":"4026.8 °C","meltLabel":"1567.8 °C","densityLabel":"15.37 g/cm³","origin":"Por descomponerse (desintegrarse radiactivamente) para producir actinio: 'proto-actinio'.","oxidationStates":[4,5],"oxidationLabel":"+4, +5","valencesLabel":"4, 5","uses":["No tiene aplicaciones prácticas: es extremadamente raro, tóxico y radiactivo.","Se estudia únicamente con fines de investigación científica."]},{"number":92,"symbol":"U","name":"Uranio","mass":"238.029","category":"cat-actinide","categoryLabel":"Actínido","period":7,"group":3,"xpos":6,"ypos":10,"phase":"Sólido","electronConfig":"[Rn] 5f3 6d1 7s2","shells":[2,8,18,32,21,9,2],"shellsLabel":"2, 8, 18, 32, 21, 9, 2","valenceElectrons":2,"boilLabel":"4130.9 °C","meltLabel":"1132.2 °C","densityLabel":"19.1 g/cm³","origin":"En honor al planeta Urano, descubierto pocos años antes que el elemento, en 1781.","oxidationStates":[3,4,5,6],"oxidationLabel":"+3, +4, +5, +6","valencesLabel":"3, 4, 5, 6","uses":["Combustible de plantas nucleares para generar electricidad.","Blindaje de radiación y contrapesos por su altísima densidad."]},{"number":93,"symbol":"Np","name":"Neptunio","mass":"237","category":"cat-actinide","categoryLabel":"Actínido","period":7,"group":3,"xpos":7,"ypos":10,"phase":"Sólido","electronConfig":"[Rn] 5f4 6d1 7s2","shells":[2,8,18,32,22,9,2],"shellsLabel":"2, 8, 18, 32, 22, 9, 2","valenceElectrons":2,"boilLabel":"4173.9 °C","meltLabel":"638.9 °C","densityLabel":"20.45 g/cm³","origin":"En honor al planeta Neptuno, siguiente a Urano en el sistema solar, igual que el neptunio sigue al uranio en la tabla.","oxidationStates":[3,4,5,6,7],"oxidationLabel":"+3, +4, +5, +6, +7","valencesLabel":"3, 4, 5, 6, 7","uses":["Subproducto de reactores nucleares; se investiga como posible combustible nuclear.","Se usa en detectores de neutrones de alta sensibilidad."]},{"number":94,"symbol":"Pu","name":"Plutonio","mass":"244","category":"cat-actinide","categoryLabel":"Actínido","period":7,"group":3,"xpos":8,"ypos":10,"phase":"Sólido","electronConfig":"[Rn] 5f6 7s2","shells":[2,8,18,32,24,8,2],"shellsLabel":"2, 8, 18, 32, 24, 8, 2","valenceElectrons":2,"boilLabel":"3231.8 °C","meltLabel":"639.4 °C","densityLabel":"19.816 g/cm³","origin":"En honor al planeta Plutón, siguiente a Neptuno, igual que el plutonio sigue al neptunio en la tabla.","oxidationStates":[3,4,5,6],"oxidationLabel":"+3, +4, +5, +6","valencesLabel":"3, 4, 5, 6","uses":["Combustible de algunos reactores nucleares y de armas nucleares.","Fuente de energía de generadores termoeléctricos para sondas espaciales, como las misiones Voyager."]},{"number":95,"symbol":"Am","name":"Americio","mass":"243","category":"cat-actinide","categoryLabel":"Actínido","period":7,"group":3,"xpos":9,"ypos":10,"phase":"Sólido","electronConfig":"[Rn] 5f7 7s2","shells":[2,8,18,32,25,8,2],"shellsLabel":"2, 8, 18, 32, 25, 8, 2","valenceElectrons":2,"boilLabel":"2606.8 °C","meltLabel":"1175.8 °C","densityLabel":"12 g/cm³","origin":"En honor al continente americano, donde se sintetizó por primera vez, en 1944.","oxidationStates":[3,4,5,6],"oxidationLabel":"+3, +4, +5, +6","valencesLabel":"3, 4, 5, 6","uses":["Fuente radiactiva de los detectores de humo domésticos.","Instrumentos de medición de espesor en la industria."]},{"number":96,"symbol":"Cm","name":"Curio","mass":"247","category":"cat-actinide","categoryLabel":"Actínido","period":7,"group":3,"xpos":10,"ypos":10,"phase":"Sólido","electronConfig":"[Rn] 5f7 6d1 7s2","shells":[2,8,18,32,25,9,2],"shellsLabel":"2, 8, 18, 32, 25, 9, 2","valenceElectrons":2,"boilLabel":"3109.8 °C","meltLabel":"1339.8 °C","densityLabel":"13.51 g/cm³","origin":"En honor a Marie y Pierre Curie, pioneros del estudio de la radiactividad.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Generadores termoeléctricos de radioisótopos para misiones espaciales de larga duración (como el róver Curiosity).","Fuente de rayos X portátil para instrumentos de exploración planetaria."]},{"number":97,"symbol":"Bk","name":"Berkelio","mass":"247","category":"cat-actinide","categoryLabel":"Actínido","period":7,"group":3,"xpos":11,"ypos":10,"phase":"Sólido","electronConfig":"[Rn] 5f9 7s2","shells":[2,8,18,32,27,8,2],"shellsLabel":"2, 8, 18, 32, 27, 8, 2","valenceElectrons":2,"boilLabel":"2626.8 °C","meltLabel":"985.9 °C","densityLabel":"14.78 g/cm³","origin":"En honor a Berkeley, California, ciudad donde se sintetizó por primera vez, en 1949.","oxidationStates":[3,4],"oxidationLabel":"+3, +4","valencesLabel":"3, 4","uses":["No tiene aplicaciones fuera del laboratorio: se produce en cantidades de microgramos para investigación.","Se usa para sintetizar elementos aún más pesados."]},{"number":98,"symbol":"Cf","name":"Californio","mass":"251","category":"cat-actinide","categoryLabel":"Actínido","period":7,"group":3,"xpos":12,"ypos":10,"phase":"Sólido","electronConfig":"[Rn] 5f10 7s2","shells":[2,8,18,32,28,8,2],"shellsLabel":"2, 8, 18, 32, 28, 8, 2","valenceElectrons":2,"boilLabel":"1469.8 °C","meltLabel":"899.9 °C","densityLabel":"15.1 g/cm³","origin":"En honor a California, estado donde se sintetizó por primera vez, en la Universidad de Berkeley.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Fuente de neutrones portátil para inspeccionar pozos petroleros y detectar explosivos.","Iniciador de reacciones en cadena en algunos reactores nucleares experimentales."]},{"number":99,"symbol":"Es","name":"Einstenio","mass":"252","category":"cat-actinide","categoryLabel":"Actínido","period":7,"group":3,"xpos":13,"ypos":10,"phase":"Sólido","electronConfig":"[Rn] 5f11 7s2","shells":[2,8,18,32,29,8,2],"shellsLabel":"2, 8, 18, 32, 29, 8, 2","valenceElectrons":2,"boilLabel":"995.9 °C","meltLabel":"859.9 °C","densityLabel":"8.84 g/cm³","origin":"En honor a Albert Einstein; sintetizado a partir de los restos de la primera prueba termonuclear, en 1952.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Se ha producido solo en cantidades de unos pocos átomos a la vez, en aceleradores de partículas.","No tiene ningún uso fuera de la investigación básica sobre los elementos más pesados."]},{"number":100,"symbol":"Fm","name":"Fermio","mass":"257","category":"cat-actinide","categoryLabel":"Actínido","period":7,"group":3,"xpos":14,"ypos":10,"phase":"Sólido","electronConfig":"[Rn] 5f12 7s2","shells":[2,8,18,32,30,8,2],"shellsLabel":"2, 8, 18, 32, 30, 8, 2","valenceElectrons":2,"boilLabel":"No determinado","meltLabel":"1526.8 °C","densityLabel":"No determinada","origin":"En honor a Enrico Fermi, físico pionero de la energía nuclear.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Se ha producido solo en cantidades de unos pocos átomos a la vez, en aceleradores de partículas.","No tiene ningún uso fuera de la investigación básica sobre los elementos más pesados."]},{"number":101,"symbol":"Md","name":"Mendelevio","mass":"258","category":"cat-actinide","categoryLabel":"Actínido","period":7,"group":3,"xpos":15,"ypos":10,"phase":"Sólido","electronConfig":"[Rn] 5f13 7s2","shells":[2,8,18,32,31,8,2],"shellsLabel":"2, 8, 18, 32, 31, 8, 2","valenceElectrons":2,"boilLabel":"No determinado","meltLabel":"826.9 °C","densityLabel":"No determinada","origin":"En honor a Dmitri Mendeléiev, creador de la tabla periódica.","oxidationStates":[2,3],"oxidationLabel":"+2, +3","valencesLabel":"2, 3","uses":["Se ha producido solo en cantidades de unos pocos átomos a la vez, en aceleradores de partículas.","No tiene ningún uso fuera de la investigación básica sobre los elementos más pesados."]},{"number":102,"symbol":"No","name":"Nobelio","mass":"259","category":"cat-actinide","categoryLabel":"Actínido","period":7,"group":3,"xpos":16,"ypos":10,"phase":"Sólido","electronConfig":"[Rn] 5f14 7s2","shells":[2,8,18,32,32,8,2],"shellsLabel":"2, 8, 18, 32, 32, 8, 2","valenceElectrons":2,"boilLabel":"No determinado","meltLabel":"826.9 °C","densityLabel":"No determinada","origin":"En honor a Alfred Nobel, fundador de los premios que llevan su nombre.","oxidationStates":[2,3],"oxidationLabel":"+2, +3","valencesLabel":"2, 3","uses":["Se ha producido solo en cantidades de unos pocos átomos a la vez, en aceleradores de partículas.","No tiene ningún uso fuera de la investigación básica sobre los elementos más pesados."]},{"number":103,"symbol":"Lr","name":"Laurencio","mass":"266","category":"cat-actinide","categoryLabel":"Actínido","period":7,"group":3,"xpos":17,"ypos":10,"phase":"Sólido","electronConfig":"[Rn] 5f14 7s2 7p1","shells":[2,8,18,32,32,8,3],"shellsLabel":"2, 8, 18, 32, 32, 8, 3","valenceElectrons":3,"boilLabel":"No determinado","meltLabel":"1626.8 °C","densityLabel":"No determinada","origin":"En honor a Ernest Lawrence, inventor del ciclotrón usado para sintetizar muchos elementos pesados.","oxidationStates":[3],"oxidationLabel":"+3","valencesLabel":"3","uses":["Se ha producido solo en cantidades de unos pocos átomos a la vez, en aceleradores de partículas.","No tiene ningún uso fuera de la investigación básica sobre los elementos más pesados."]},{"number":104,"symbol":"Rf","name":"Rutherfordio","mass":"267","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":7,"group":4,"xpos":4,"ypos":7,"phase":"Sólido","electronConfig":"[Rn] 5f14 6d2 7s2","shells":[2,8,18,32,32,10,2],"shellsLabel":"2, 8, 18, 32, 32, 10, 2","valenceElectrons":2,"boilLabel":"5526.9 °C","meltLabel":"2126.8 °C","densityLabel":"23.2 g/cm³","origin":"En honor a Ernest Rutherford, pionero de la física nuclear y del modelo atómico.","oxidationStates":[4],"oxidationLabel":"+4","valencesLabel":"4","uses":["Es un elemento sintético: se produce solo en laboratorios de física nuclear, átomo por átomo, y se desintegra en fracciones de segundo.","No tiene ningún uso práctico ni comercial; existe únicamente para estudiar la estructura del núcleo atómico y los límites de la tabla periódica."]},{"number":105,"symbol":"Db","name":"Dubnio","mass":"268","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":7,"group":5,"xpos":5,"ypos":7,"phase":"Sólido","electronConfig":"[Rn] 5f14 6d3 7s2","shells":[2,8,18,32,32,11,2],"shellsLabel":"2, 8, 18, 32, 32, 11, 2","valenceElectrons":2,"boilLabel":"No determinado","meltLabel":"No determinado","densityLabel":"29.3 g/cm³","origin":"En honor a Dubna, la ciudad rusa donde se encuentra el instituto que lo sintetizó.","oxidationStates":[5],"oxidationLabel":"+5","valencesLabel":"5","uses":["Es un elemento sintético: se produce solo en laboratorios de física nuclear, átomo por átomo, y se desintegra en fracciones de segundo.","No tiene ningún uso práctico ni comercial; existe únicamente para estudiar la estructura del núcleo atómico y los límites de la tabla periódica."]},{"number":106,"symbol":"Sg","name":"Seaborgio","mass":"269","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":7,"group":6,"xpos":6,"ypos":7,"phase":"Sólido","electronConfig":"[Rn] 5f14 6d4 7s2","shells":[2,8,18,32,32,12,2],"shellsLabel":"2, 8, 18, 32, 32, 12, 2","valenceElectrons":2,"boilLabel":"No determinado","meltLabel":"No determinado","densityLabel":"35 g/cm³","origin":"En honor a Glenn T. Seaborg, descubridor de varios elementos transuránicos.","oxidationStates":[6],"oxidationLabel":"+6","valencesLabel":"6","uses":["Es un elemento sintético: se produce solo en laboratorios de física nuclear, átomo por átomo, y se desintegra en fracciones de segundo.","No tiene ningún uso práctico ni comercial; existe únicamente para estudiar la estructura del núcleo atómico y los límites de la tabla periódica."]},{"number":107,"symbol":"Bh","name":"Bohrio","mass":"270","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":7,"group":7,"xpos":7,"ypos":7,"phase":"Sólido","electronConfig":"[Rn] 5f14 6d5 7s2","shells":[2,8,18,32,32,13,2],"shellsLabel":"2, 8, 18, 32, 32, 13, 2","valenceElectrons":2,"boilLabel":"No determinado","meltLabel":"No determinado","densityLabel":"37.1 g/cm³","origin":"En honor a Niels Bohr, físico danés pionero del modelo atómico moderno.","oxidationStates":[7],"oxidationLabel":"+7","valencesLabel":"7","uses":["Es un elemento sintético: se produce solo en laboratorios de física nuclear, átomo por átomo, y se desintegra en fracciones de segundo.","No tiene ningún uso práctico ni comercial; existe únicamente para estudiar la estructura del núcleo atómico y los límites de la tabla periódica."]},{"number":108,"symbol":"Hs","name":"Hasio","mass":"269","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":7,"group":8,"xpos":8,"ypos":7,"phase":"Sólido","electronConfig":"[Rn] 5f14 6d6 7s2","shells":[2,8,18,32,32,14,2],"shellsLabel":"2, 8, 18, 32, 32, 14, 2","valenceElectrons":2,"boilLabel":"No determinado","meltLabel":"-147.1 °C","densityLabel":"40.7 g/cm³","origin":"De Hesse, estado alemán donde se encuentra el instituto que lo sintetizó.","oxidationStates":[8],"oxidationLabel":"+8","valencesLabel":"8","uses":["Es un elemento sintético: se produce solo en laboratorios de física nuclear, átomo por átomo, y se desintegra en fracciones de segundo.","No tiene ningún uso práctico ni comercial; existe únicamente para estudiar la estructura del núcleo atómico y los límites de la tabla periódica."]},{"number":109,"symbol":"Mt","name":"Meitnerio","mass":"278","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":7,"group":9,"xpos":9,"ypos":7,"phase":"Sólido","electronConfig":"[Rn] 5f14 6d7 7s2","shells":[2,8,18,32,32,15,2],"shellsLabel":"2, 8, 18, 32, 32, 15, 2","valenceElectrons":2,"boilLabel":"No determinado","meltLabel":"No determinado","densityLabel":"37.4 g/cm³","origin":"En honor a Lise Meitner, física pionera en el descubrimiento de la fisión nuclear.","oxidationStates":[],"oxidationLabel":"No establecido","valencesLabel":"No establecidas","uses":["Es un elemento sintético: se produce solo en laboratorios de física nuclear, átomo por átomo, y se desintegra en fracciones de segundo.","No tiene ningún uso práctico ni comercial; existe únicamente para estudiar la estructura del núcleo atómico y los límites de la tabla periódica."]},{"number":110,"symbol":"Ds","name":"Darmstadtio","mass":"281","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":7,"group":10,"xpos":10,"ypos":7,"phase":"Sólido","electronConfig":"[Rn] 5f14 6d9 7s1","shells":[2,8,18,32,32,16,2],"shellsLabel":"2, 8, 18, 32, 32, 16, 2","valenceElectrons":2,"boilLabel":"No determinado","meltLabel":"No determinado","densityLabel":"34.8 g/cm³","origin":"De Darmstadt, la ciudad alemana donde se encuentra el instituto que lo sintetizó.","oxidationStates":[],"oxidationLabel":"No establecido","valencesLabel":"No establecidas","uses":["Es un elemento sintético: se produce solo en laboratorios de física nuclear, átomo por átomo, y se desintegra en fracciones de segundo.","No tiene ningún uso práctico ni comercial; existe únicamente para estudiar la estructura del núcleo atómico y los límites de la tabla periódica."]},{"number":111,"symbol":"Rg","name":"Roentgenio","mass":"282","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":7,"group":11,"xpos":11,"ypos":7,"phase":"Sólido","electronConfig":"[Rn] 5f14 6d10 7s1","shells":[2,8,18,32,32,17,2],"shellsLabel":"2, 8, 18, 32, 32, 17, 2","valenceElectrons":2,"boilLabel":"No determinado","meltLabel":"No determinado","densityLabel":"28.7 g/cm³","origin":"En honor a Wilhelm Röntgen, descubridor de los rayos X.","oxidationStates":[],"oxidationLabel":"No establecido","valencesLabel":"No establecidas","uses":["Es un elemento sintético: se produce solo en laboratorios de física nuclear, átomo por átomo, y se desintegra en fracciones de segundo.","No tiene ningún uso práctico ni comercial; existe únicamente para estudiar la estructura del núcleo atómico y los límites de la tabla periódica."]},{"number":112,"symbol":"Cn","name":"Copernicio","mass":"285","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":7,"group":12,"xpos":12,"ypos":7,"phase":"Líquido","electronConfig":"[Rn] 5f14 6d10 7s2","shells":[2,8,18,32,32,18,2],"shellsLabel":"2, 8, 18, 32, 32, 18, 2","valenceElectrons":2,"boilLabel":"3296.8 °C","meltLabel":"No determinado","densityLabel":"14 g/cm³","origin":"En honor a Nicolás Copérnico, astrónomo que propuso el modelo heliocéntrico del sistema solar.","oxidationStates":[2],"oxidationLabel":"+2","valencesLabel":"2","uses":["Es un elemento sintético: se produce solo en laboratorios de física nuclear, átomo por átomo, y se desintegra en fracciones de segundo.","No tiene ningún uso práctico ni comercial; existe únicamente para estudiar la estructura del núcleo atómico y los límites de la tabla periódica."]},{"number":113,"symbol":"Nh","name":"Nihonio","mass":"286","category":"cat-transition-metal","categoryLabel":"Metal de transición","period":7,"group":13,"xpos":13,"ypos":7,"phase":"Sólido","electronConfig":"[Rn] 5f14 6d10 7s2 7p1","shells":[2,8,18,32,32,18,3],"shellsLabel":"2, 8, 18, 32, 32, 18, 3","valenceElectrons":3,"boilLabel":"1156.8 °C","meltLabel":"426.9 °C","densityLabel":"16 g/cm³","origin":"En honor a Japón (Nihon, en japonés), país del instituto que lo sintetizó por primera vez.","oxidationStates":[],"oxidationLabel":"No establecido","valencesLabel":"No establecidas","uses":["Es un elemento sintético: se produce solo en laboratorios de física nuclear, átomo por átomo, y se desintegra en fracciones de segundo.","No tiene ningún uso práctico ni comercial; existe únicamente para estudiar la estructura del núcleo atómico y los límites de la tabla periódica."]},{"number":114,"symbol":"Fl","name":"Flerovio","mass":"289","category":"cat-post-transition","categoryLabel":"Otro metal (post-transición)","period":7,"group":14,"xpos":14,"ypos":7,"phase":"Sólido","electronConfig":"[Rn] 5f14 6d10 7s2 7p2","shells":[2,8,18,32,32,18,4],"shellsLabel":"2, 8, 18, 32, 32, 18, 4","valenceElectrons":4,"boilLabel":"146.9 °C","meltLabel":"66.9 °C","densityLabel":"14 g/cm³","origin":"En honor a Flerov, el laboratorio ruso (a su vez nombrado por el físico Gueorgui Flërov) que lo sintetizó.","oxidationStates":[2,4],"oxidationLabel":"+2, +4","valencesLabel":"2, 4","uses":["Es un elemento sintético: se produce solo en laboratorios de física nuclear, átomo por átomo, y se desintegra en fracciones de segundo.","No tiene ningún uso práctico ni comercial; existe únicamente para estudiar la estructura del núcleo atómico y los límites de la tabla periódica."]},{"number":115,"symbol":"Mc","name":"Moscovio","mass":"289","category":"cat-post-transition","categoryLabel":"Otro metal (post-transición)","period":7,"group":15,"xpos":15,"ypos":7,"phase":"Sólido","electronConfig":"[Rn] 5f14 6d10 7s2 7p3","shells":[2,8,18,32,32,18,5],"shellsLabel":"2, 8, 18, 32, 32, 18, 5","valenceElectrons":5,"boilLabel":"1126.8 °C","meltLabel":"396.9 °C","densityLabel":"13.5 g/cm³","origin":"En honor a la región de Moscú, donde se encuentra el instituto que lo sintetizó.","oxidationStates":[],"oxidationLabel":"No establecido","valencesLabel":"No establecidas","uses":["Es un elemento sintético: se produce solo en laboratorios de física nuclear, átomo por átomo, y se desintegra en fracciones de segundo.","No tiene ningún uso práctico ni comercial; existe únicamente para estudiar la estructura del núcleo atómico y los límites de la tabla periódica."]},{"number":116,"symbol":"Lv","name":"Livermorio","mass":"293","category":"cat-post-transition","categoryLabel":"Otro metal (post-transición)","period":7,"group":16,"xpos":16,"ypos":7,"phase":"Sólido","electronConfig":"[Rn] 5f14 6d10 7s2 7p4","shells":[2,8,18,32,32,18,6],"shellsLabel":"2, 8, 18, 32, 32, 18, 6","valenceElectrons":6,"boilLabel":"811.9 °C","meltLabel":"435.9 °C","densityLabel":"12.9 g/cm³","origin":"En honor a Livermore, California, ciudad del laboratorio estadounidense que colaboró en sintetizarlo.","oxidationStates":[],"oxidationLabel":"No establecido","valencesLabel":"No establecidas","uses":["Es un elemento sintético: se produce solo en laboratorios de física nuclear, átomo por átomo, y se desintegra en fracciones de segundo.","No tiene ningún uso práctico ni comercial; existe únicamente para estudiar la estructura del núcleo atómico y los límites de la tabla periódica."]},{"number":117,"symbol":"Ts","name":"Teneso","mass":"294","category":"cat-metalloid","categoryLabel":"Metaloide","period":7,"group":17,"xpos":17,"ypos":7,"phase":"Sólido","electronConfig":"[Rn] 5f14 6d10 7s2 7p5","shells":[2,8,18,32,32,18,7],"shellsLabel":"2, 8, 18, 32, 32, 18, 7","valenceElectrons":7,"boilLabel":"609.9 °C","meltLabel":"449.9 °C","densityLabel":"7.17 g/cm³","origin":"En honor al estado de Tennessee, sede de laboratorios clave en su síntesis.","oxidationStates":[-1,1,3],"oxidationLabel":"-1, +1, +3","valencesLabel":"1, 3","uses":["Es un elemento sintético: se produce solo en laboratorios de física nuclear, átomo por átomo, y se desintegra en fracciones de segundo.","No tiene ningún uso práctico ni comercial; existe únicamente para estudiar la estructura del núcleo atómico y los límites de la tabla periódica."]},{"number":118,"symbol":"Og","name":"Oganesón","mass":"294","category":"cat-noble-gas","categoryLabel":"Gas noble","period":7,"group":18,"xpos":18,"ypos":7,"phase":"Sólido","electronConfig":"[Rn] 5f14 6d10 7s2 7p6","shells":[2,8,18,32,32,18,8],"shellsLabel":"2, 8, 18, 32, 32, 18, 8","valenceElectrons":8,"boilLabel":"76.9 °C","meltLabel":"No determinado","densityLabel":"4.95 g/cm³","origin":"En honor a Yuri Oganesián, físico pionero en la síntesis de elementos superpesados.","oxidationStates":[],"oxidationLabel":"No establecido","valencesLabel":"No establecidas","uses":["Es un elemento sintético: se produce solo en laboratorios de física nuclear, átomo por átomo, y se desintegra en fracciones de segundo.","No tiene ningún uso práctico ni comercial; existe únicamente para estudiar la estructura del núcleo atómico y los límites de la tabla periódica."]}];
+
+  var CATS = [
+    ["cat-alkali-metal","Metales alcalinos"],
+    ["cat-alkaline-earth","Alcalinotérreos"],
+    ["cat-transition-metal","Metales de transición"],
+    ["cat-post-transition","Otros metales"],
+    ["cat-metalloid","Metaloides"],
+    ["cat-nonmetal","No metales"],
+    ["cat-halogen","Halógenos"],
+    ["cat-noble-gas","Gases nobles"],
+    ["cat-lanthanide","Lantánidos"],
+    ["cat-actinide","Actínidos"],
+    ["cat-unknown","Desconocido / sintético"]
+  ];
+
+  var GROUP_NAMES = {1:"Alcalinos", 2:"Alcalinotérreos", 17:"Halógenos", 18:"Gases nobles"};
+  var CAT_LABELS = {};
+  CATS.forEach(function(c){ CAT_LABELS[c[0]] = c[1]; });
+
+  var activeCategory = null;
+
+  function $(id){ return document.getElementById(id); }
+
+  function buildLegend(){
+    var legend = $("legend");
+    CATS.forEach(function(c){
+      var item = document.createElement("button");
+      item.type = "button";
+      item.className = "legend-item";
+      item.dataset.cat = c[0];
+      item.setAttribute("aria-pressed", "false");
+      var sw = document.createElement("span");
+      sw.className = "legend-swatch";
+      sw.style.background = "var(--" + c[0] + ")";
+      var label = document.createElement("span");
+      label.className = "legend-label";
+      label.textContent = c[1];
+      item.appendChild(sw);
+      item.appendChild(label);
+      item.setAttribute("aria-label", "Filtrar por " + c[1]);
+      item.addEventListener("click", function(){
+        activeCategory = (activeCategory === this.dataset.cat) ? null : this.dataset.cat;
+        applyFilters();
+      });
+      legend.appendChild(item);
+    });
+  }
+
+  function buildGrid(){
+    var grid = $("grid");
+
+    for (var g = 1; g <= 18; g++){
+      var gh = document.createElement("div");
+      gh.className = "hd hd-group";
+      gh.style.gridColumn = g + 1;
+      gh.textContent = g;
+      if (GROUP_NAMES[g]) gh.title = "Familia: " + GROUP_NAMES[g];
+      grid.appendChild(gh);
+    }
+    for (var p = 1; p <= 7; p++){
+      var ph = document.createElement("div");
+      ph.className = "hd hd-period";
+      ph.style.gridRow = p + 1;
+      ph.textContent = p;
+      ph.title = "Periodo " + p;
+      grid.appendChild(ph);
+    }
+    ["*","**"].forEach(function(mark, i){
+      var mh = document.createElement("div");
+      mh.className = "hd hd-period";
+      mh.style.gridRow = 10 + i;
+      mh.textContent = mark;
+      mh.title = i === 0 ? "Lantánidos" : "Actínidos";
+      grid.appendChild(mh);
+    });
+
+    var spacer = document.createElement("div");
+    spacer.className = "spacer-row";
+    grid.appendChild(spacer);
+
+    ELEMENTS.forEach(function(el){
+      var tile = document.createElement("button");
+      tile.type = "button";
+      tile.className = "tile";
+      tile.style.background = "var(--" + el.category + ")";
+      tile.style.gridColumn = el.xpos + 1;
+      tile.style.gridRow = el.ypos + 1;
+      tile.dataset.number = el.number;
+      tile.dataset.category = el.category;
+      tile.dataset.search = (el.name + " " + el.symbol + " " + el.number).toLowerCase();
+      tile.title = el.name;
+      tile.setAttribute("aria-label", el.name + ", " + el.symbol + ", número atómico " + el.number);
+      tile.innerHTML =
+        '<span class="t-num">' + el.number + '</span>' +
+        '<span class="t-symbol">' + el.symbol + '</span>' +
+        '<span class="t-name">' + el.name + '</span>' +
+        '<span class="t-mass">' + el.mass + '</span>';
+      tile.addEventListener("click", function(){
+        var num = parseInt(this.dataset.number, 10);
+        var found = ELEMENTS.filter(function(x){ return x.number === num; })[0];
+        openCard(found, this);
+      });
+      grid.appendChild(tile);
+    });
+  }
+
+  var lastFocused = null;
+
+  function openCard(el, sourceTile){
+    lastFocused = sourceTile || document.activeElement;
+
+    var badge = $("cardBadge");
+    badge.textContent = el.categoryLabel;
+    badge.style.background = "var(--" + el.category + ")";
+
+    $("elementBox").style.background = "var(--" + el.category + ")";
+    $("ebNum").textContent = el.number;
+    $("ebMass").textContent = el.mass;
+    $("ebBoil").textContent = el.boilLabel;
+    $("ebMelt").textContent = el.meltLabel;
+    $("ebDensity").textContent = el.densityLabel;
+    $("ebValence").textContent = (el.valenceElectrons != null ? el.valenceElectrons : "—");
+    $("ebSymbol").textContent = el.symbol;
+    $("ebConfig").textContent = el.electronConfig;
+    $("ebName").textContent = el.name;
+
+    $("infoTitle").textContent = "Más información";
+    $("infoSubtitle").textContent = el.name + " (" + el.symbol + ") · Z = " + el.number;
+    $("infoOrigin").textContent = el.origin;
+    $("infoOx").textContent = el.oxidationLabel;
+    $("infoValencias").textContent = el.valencesLabel;
+    $("infoPhase").textContent = el.phase;
+
+    var list = $("usageList");
+    list.innerHTML = "";
+    el.uses.forEach(function(u){
+      var item = document.createElement("div");
+      item.className = "u-item";
+      var dot = document.createElement("span");
+      dot.className = "u-dot";
+      var desc = document.createElement("span");
+      desc.className = "u-desc";
+      desc.textContent = u;
+      item.appendChild(dot);
+      item.appendChild(desc);
+      list.appendChild(item);
+    });
+
+    $("track").classList.remove("show-usage");
+    var scrim = $("scrim");
+    scrim.hidden = false;
+    $("closeBtn").focus();
+  }
+
+  function closeCard(){
+    $("scrim").hidden = true;
+    if (lastFocused && typeof lastFocused.focus === "function") lastFocused.focus();
+  }
+
+  function initTheme(){
+    var saved = null;
+    try { saved = localStorage.getItem("elementa-theme"); } catch(e) {}
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+    updateThemeLabel();
+  }
+
+  function updateThemeLabel(){
+    var explicit = document.documentElement.getAttribute("data-theme");
+    var isDark = explicit ? explicit === "dark" : window.matchMedia("(prefers-color-scheme: light)").matches === false;
+    $("themeBtn").textContent = "Tema: " + (isDark ? "Oscuro" : "Claro");
+  }
+
+  function toggleTheme(){
+    var current = document.documentElement.getAttribute("data-theme");
+    var currentlyDark = current ? current === "dark" : window.matchMedia("(prefers-color-scheme: light)").matches === false;
+    var next = currentlyDark ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    try { localStorage.setItem("elementa-theme", next); } catch(e) {}
+    updateThemeLabel();
+  }
+
+  function applyFilters(){
+    var q = $("search").value.trim().toLowerCase();
+
+    var tiles = document.querySelectorAll(".tile");
+    tiles.forEach(function(t){
+      var matchesSearch = !q || t.dataset.search.indexOf(q) !== -1;
+      var matchesCategory = !activeCategory || t.dataset.category === activeCategory;
+      t.classList.toggle("is-dim", !(matchesSearch && matchesCategory));
+    });
+
+    var items = document.querySelectorAll(".legend-item");
+    items.forEach(function(item){
+      var isActive = item.dataset.cat === activeCategory;
+      item.classList.toggle("is-active", isActive);
+      item.classList.toggle("is-dim", !!activeCategory && !isActive);
+      item.setAttribute("aria-pressed", isActive ? "true" : "false");
+    });
+
+    var hint = $("legendHint");
+    hint.textContent = activeCategory
+      ? "Filtrando por " + CAT_LABELS[activeCategory] + " — haz clic de nuevo en la categoría para quitar el filtro."
+      : "Haz clic en una categoría para filtrar la tabla; haz clic de nuevo para quitar el filtro.";
+  }
+
+  function initSearch(){
+    $("search").addEventListener("input", applyFilters);
+  }
+
+  var cardViewIndex = 0;
+
+  function renderCardView(idx){
+    if (idx < 0) idx = 0;
+    if (idx > ELEMENTS.length - 1) idx = ELEMENTS.length - 1;
+    cardViewIndex = idx;
+    var el = ELEMENTS[idx];
+
+    var badge = $("cvBadge");
+    badge.textContent = el.categoryLabel;
+    badge.style.background = "var(--" + el.category + ")";
+
+    $("cvBox").style.background = "var(--" + el.category + ")";
+    $("cvNum").textContent = el.number;
+    $("cvMass").textContent = el.mass;
+    $("cvBoil").textContent = el.boilLabel;
+    $("cvMelt").textContent = el.meltLabel;
+    $("cvDensity").textContent = el.densityLabel;
+    $("cvValence").textContent = (el.valenceElectrons != null ? el.valenceElectrons : "—");
+    $("cvSymbol").textContent = el.symbol;
+    $("cvConfig").textContent = el.electronConfig;
+    $("cvName").textContent = el.name;
+
+    $("cvInfoSubtitle").textContent = el.name + " (" + el.symbol + ") · Z = " + el.number;
+    $("cvOrigin").textContent = el.origin;
+    $("cvOx").textContent = el.oxidationLabel;
+    $("cvValencias").textContent = el.valencesLabel;
+    $("cvPhase").textContent = el.phase;
+
+    var list = $("cvUsageList");
+    list.innerHTML = "";
+    el.uses.forEach(function(u){
+      var item = document.createElement("div");
+      item.className = "u-item";
+      var dot = document.createElement("span");
+      dot.className = "u-dot";
+      var desc = document.createElement("span");
+      desc.className = "u-desc";
+      desc.textContent = u;
+      item.appendChild(dot);
+      item.appendChild(desc);
+      list.appendChild(item);
+    });
+
+    $("cvTrack").classList.remove("show-usage");
+    $("cvCounter").textContent = "Elemento " + (idx + 1) + " de " + ELEMENTS.length;
+    $("cvPrevBtn").disabled = idx === 0;
+    $("cvNextBtn").disabled = idx === ELEMENTS.length - 1;
+  }
+
+  function showCardView(){
+    $("tableView").hidden = true;
+    $("cardViewSection").hidden = false;
+    renderCardView(0);
+    $("cvExitBtn").focus();
+  }
+
+  function hideCardView(){
+    $("cardViewSection").hidden = true;
+    $("tableView").hidden = false;
+    $("cardViewBtn").focus();
+  }
+
+  /* swipe (drag) navigation for the card view: works with touch, mouse and pen via Pointer Events */
+  var swipe = { active:false, pointerId:null, startX:0, startY:0, deltaX:0, axis:null };
+  var SWIPE_THRESHOLD = 60;
+
+  function swipeStart(e){
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    if (e.target.closest("button, a")) return; /* let taps on buttons (Más información, etc.) behave normally */
+    var card = $("cvCard");
+    swipe.active = true;
+    swipe.pointerId = e.pointerId;
+    swipe.startX = e.clientX;
+    swipe.startY = e.clientY;
+    swipe.deltaX = 0;
+    swipe.axis = null;
+    card.style.transition = "none";
+    card.classList.add("is-dragging");
+    try { card.setPointerCapture(e.pointerId); } catch(err) {}
+  }
+
+  function swipeMove(e){
+    if (!swipe.active || e.pointerId !== swipe.pointerId) return;
+    var dx = e.clientX - swipe.startX;
+    var dy = e.clientY - swipe.startY;
+    if (swipe.axis === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)){
+      swipe.axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+    }
+    if (swipe.axis === "x"){
+      if (e.cancelable) e.preventDefault();
+      swipe.deltaX = dx;
+      $("cvCard").style.transform = "translateX(" + dx + "px)";
+    }
+  }
+
+  function swipeEnd(e){
+    if (!swipe.active || (e.pointerId !== undefined && e.pointerId !== swipe.pointerId)) return;
+    swipe.active = false;
+    var card = $("cvCard");
+    card.classList.remove("is-dragging");
+    card.style.transition = "transform .22s ease";
+
+    var dir = swipe.deltaX < 0 ? 1 : -1;
+    var atBoundary = (dir === 1 && cardViewIndex === ELEMENTS.length - 1) || (dir === -1 && cardViewIndex === 0);
+    var passedThreshold = swipe.axis === "x" && Math.abs(swipe.deltaX) > SWIPE_THRESHOLD;
+
+    if (passedThreshold && !atBoundary){
+      var flyTo = dir === 1 ? -480 : 480;
+      card.style.transform = "translateX(" + flyTo + "px)";
+      setTimeout(function(){
+        renderCardView(cardViewIndex + dir);
+        card.style.transition = "none";
+        card.style.transform = "translateX(" + (-flyTo) + "px)";
+        void card.offsetWidth; /* force reflow so the next transition runs */
+        card.style.transition = "transform .22s ease";
+        card.style.transform = "translateX(0)";
+      }, 220);
+    } else {
+      card.style.transform = "translateX(0)";
+    }
+
+    swipe.deltaX = 0;
+    swipe.axis = null;
+    swipe.pointerId = null;
+  }
+
+  function initSwipe(){
+    var card = $("cvCard");
+    card.addEventListener("pointerdown", swipeStart);
+    card.addEventListener("pointermove", swipeMove);
+    card.addEventListener("pointerup", swipeEnd);
+    card.addEventListener("pointercancel", swipeEnd);
+  }
+
+  buildLegend();
+  buildGrid();
+  initTheme();
+  initSearch();
+  initSwipe();
+
+  $("closeBtn").addEventListener("click", closeCard);
+  $("scrim").addEventListener("click", function(e){ if (e.target === $("scrim")) closeCard(); });
+  $("infoBtn").addEventListener("click", function(){ $("track").classList.add("show-usage"); });
+  $("backBtn").addEventListener("click", function(){ $("track").classList.remove("show-usage"); });
+  $("themeBtn").addEventListener("click", toggleTheme);
+
+  $("cardViewBtn").addEventListener("click", showCardView);
+  $("cvExitBtn").addEventListener("click", hideCardView);
+  $("cvPrevBtn").addEventListener("click", function(){ renderCardView(cardViewIndex - 1); });
+  $("cvNextBtn").addEventListener("click", function(){ renderCardView(cardViewIndex + 1); });
+  $("cvInfoBtn").addEventListener("click", function(){ $("cvTrack").classList.add("show-usage"); });
+  $("cvBackBtn").addEventListener("click", function(){ $("cvTrack").classList.remove("show-usage"); });
+
+  $("helpBtn").addEventListener("click", function(){ $("helpScrim").hidden = false; $("helpCloseBtn").focus(); });
+  $("helpCloseBtn").addEventListener("click", function(){ $("helpScrim").hidden = true; $("helpBtn").focus(); });
+  $("helpScrim").addEventListener("click", function(e){ if (e.target === $("helpScrim")) { $("helpScrim").hidden = true; } });
+
+  document.addEventListener("keydown", function(e){
+    if (e.key !== "Escape") return;
+    if (!$("scrim").hidden) closeCard();
+    if (!$("helpScrim").hidden) $("helpScrim").hidden = true;
+  });
+</script>
+
+</body>
+</html>
