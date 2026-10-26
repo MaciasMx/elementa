@@ -168,6 +168,59 @@
   .t-symbol{ font-family:var(--font-display); font-weight:700; font-size:16px; line-height:1.1; }
   .t-name{ font-family:var(--font-sans); font-size:6.4px; font-weight:600; text-transform:uppercase; letter-spacing:.01em; opacity:.9; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .t-mass{ font-family:var(--font-mono); font-size:7px; font-weight:500; opacity:.75; line-height:1.1; }
+  /* placeholders in group 3 that point to the f-block rows below */
+  .series-tile{ border:1px dashed rgba(0,33,71,.5); }
+  .s-name{ font-family:var(--font-sans); font-size:8px; font-weight:700; line-height:1.1; white-space:nowrap; }
+  .s-range{ font-family:var(--font-mono); font-size:11px; font-weight:600; line-height:1; white-space:nowrap; }
+
+  /* ---- reading material: history PDF and timeline image ---- */
+  .resource-bar{ display:flex; flex-wrap:wrap; gap:var(--space-3); margin-bottom:var(--space-4); }
+  .resource-btn{
+    display:inline-flex; align-items:center; gap:var(--space-2);
+    background:var(--surface-300); color:var(--ink); border:1px solid var(--border);
+    font-family:var(--font-sans); font-size:13.5px; font-weight:600; border-radius:var(--radius-md);
+    padding:var(--space-2) var(--space-4); cursor:pointer; text-align:left;
+  }
+  .resource-btn svg{ width:18px; height:18px; flex:none; color:var(--link); }
+  .resource-btn:hover{ background:var(--surface-200); }
+  .resource-btn:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px; }
+
+  .media-card{
+    width:100%; max-width:1100px; height:calc(100vh - var(--space-5) * 2); height:calc(100dvh - var(--space-5) * 2);
+    background:var(--surface-200); border:1px solid var(--border); border-radius:var(--radius-md);
+    box-shadow:var(--shadow-card); position:relative; overflow:hidden;
+    display:flex; flex-direction:column;
+    animation: cardIn .3s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .media-card.is-image{ max-width:900px; height:auto; max-height:calc(100vh - var(--space-5) * 2); max-height:calc(100dvh - var(--space-5) * 2); }
+  .media-head{
+    display:flex; align-items:center; flex-wrap:wrap; gap:var(--space-2) var(--space-4); flex:none;
+    padding:var(--space-3) 52px var(--space-3) var(--space-5); border-bottom:1px solid var(--border);
+  }
+  .media-title{ font-family:var(--font-display); font-weight:600; font-size:17px; color:var(--ink); margin-right:auto; }
+  .media-link{
+    font-family:var(--font-sans); font-size:12px; font-weight:600; color:var(--link);
+    text-transform:uppercase; letter-spacing:.04em; text-decoration:none; white-space:nowrap;
+  }
+  .media-link:hover{ text-decoration:underline; }
+  .media-body{ flex:1; min-height:0; background:var(--surface-100); overflow:auto; overscroll-behavior:contain; }
+  .media-body iframe{ display:block; width:100%; height:100%; border:0; }
+  .media-body iframe[hidden]{ display:none; }
+  .media-body img{ display:block; width:100%; height:auto; }
+  .media-fallback{
+    height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--space-4);
+    padding:var(--space-5); text-align:center;
+  }
+  .media-fallback[hidden]{ display:none; }
+  .media-fallback p{ margin:0; max-width:420px; font-family:var(--font-sans); font-size:14px; line-height:1.45; color:var(--ink); }
+  .media-fallback .fb-actions{ display:flex; flex-wrap:wrap; justify-content:center; gap:var(--space-3); }
+  .fb-btn{
+    display:inline-flex; align-items:center; background:var(--accent); color:var(--ink-on-fill);
+    font-family:var(--font-sans); font-size:14px; font-weight:600; text-decoration:none;
+    border-radius:var(--radius-md); padding:var(--space-3) var(--space-5);
+  }
+  .fb-btn:hover{ background:var(--accent-strong); }
+  .fb-btn.secondary{ background:var(--surface-300); color:var(--ink); border:1px solid var(--border); }
 
   .note{
     margin-top: var(--space-6); font-family:var(--font-sans); font-size:12px; color:var(--ink-muted); text-align:center;
@@ -215,7 +268,7 @@
   .scrim[hidden]{ display:none; }
   @keyframes scrimIn{ from{opacity:0;} to{opacity:1;} }
   @keyframes cardIn{ from{opacity:0; transform:scale(.92) translateY(14px);} to{opacity:1; transform:scale(1) translateY(0);} }
-  @media (prefers-reduced-motion: reduce){ .scrim, .card, .help-card{ animation:none; } }
+  @media (prefers-reduced-motion: reduce){ .scrim, .card, .help-card, .media-card{ animation:none; } }
 
   .close-btn{
     position:absolute; top:var(--space-3); right:var(--space-3); z-index:5;
@@ -370,6 +423,10 @@
     .search{ flex:1 1 100%; min-width:0; }
     .masthead-crest{ height:42px; }
     .brand-name{ font-size:22px; }
+    .scrim.media-scrim{ padding:var(--space-3); }
+    .media-card{ height:calc(100vh - var(--space-3) * 2); height:calc(100dvh - var(--space-3) * 2); }
+    .media-head{ padding-left:var(--space-4); }
+    .resource-btn{ flex:1 1 100%; }
   }
 </style>
 </head>
@@ -390,6 +447,17 @@
 </header>
 
 <div class="wrap">
+
+  <div class="resource-bar">
+    <button class="resource-btn" id="historyBtn" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg>
+      Historia de la tabla periódica
+    </button>
+    <button class="resource-btn" id="timelineBtn" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12h20"/><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 10V5M12 14v5M18 10V5"/></svg>
+      Línea del tiempo de la tabla periódica
+    </button>
+  </div>
 
   <div id="tableView">
     <div class="legend" id="legend"></div>
@@ -559,6 +627,40 @@
   </div>
 </div>
 
+<div class="scrim media-scrim" id="historyScrim" hidden>
+  <div class="media-card" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+    <button class="close-btn" id="historyCloseBtn" type="button" aria-label="Cerrar"></button>
+    <div class="media-head">
+      <div class="media-title" id="historyTitle">Historia de la tabla periódica</div>
+      <a class="media-link" href="historia-de-la-tabla-periodica.pdf" target="_blank" rel="noopener">Abrir en otra pestaña</a>
+      <a class="media-link" href="historia-de-la-tabla-periodica.pdf" download>Descargar</a>
+    </div>
+    <div class="media-body">
+      <iframe id="historyFrame" title="Historia de la tabla periódica (PDF)" hidden></iframe>
+      <div class="media-fallback" id="historyFallback" hidden>
+        <p>En este dispositivo el documento se lee mejor en el visor de PDF del propio navegador.</p>
+        <div class="fb-actions">
+          <a class="fb-btn" href="historia-de-la-tabla-periodica.pdf" target="_blank" rel="noopener">Abrir el PDF</a>
+          <a class="fb-btn secondary" href="historia-de-la-tabla-periodica.pdf" download>Descargar</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="scrim media-scrim" id="timelineScrim" hidden>
+  <div class="media-card is-image" role="dialog" aria-modal="true" aria-labelledby="timelineTitle">
+    <button class="close-btn" id="timelineCloseBtn" type="button" aria-label="Cerrar"></button>
+    <div class="media-head">
+      <div class="media-title" id="timelineTitle">Línea del tiempo de la tabla periódica</div>
+      <a class="media-link" href="linea-del-tiempo-tabla-periodica.jpeg" target="_blank" rel="noopener">Ver en tamaño completo</a>
+    </div>
+    <div class="media-body">
+      <img id="timelineImg" alt="Línea del tiempo de la historia de la tabla periódica: Lavoisier (1789), Döbereiner (1829), Newlands (1864), Mendeléyev (1869), Ramsay (1894–1898), Moseley (1913) y Seaborg (1940–1950)." width="750" height="562">
+    </div>
+  </div>
+</div>
+
 <div class="scrim" id="helpScrim" hidden>
   <div class="help-card" role="dialog" aria-modal="true" aria-label="Cómo leer una casilla">
     <button class="close-btn" id="helpCloseBtn" type="button" aria-label="Cerrar"></button>
@@ -616,6 +718,10 @@
   ];
 
   var GROUP_NAMES = {1:"Alcalinos", 2:"Alcalinotérreos", 17:"Halógenos", 18:"Gases nobles"};
+  var SERIES = [
+    {category:"cat-lanthanide", name:"Lantánidos", mark:"*", from:57, to:71, row:7},
+    {category:"cat-actinide", name:"Actínidos", mark:"**", from:89, to:103, row:8}
+  ];
   var CAT_LABELS = {};
   CATS.forEach(function(c){ CAT_LABELS[c[0]] = c[1]; });
 
@@ -685,6 +791,29 @@
     var spacer = document.createElement("div");
     spacer.className = "spacer-row";
     grid.appendChild(spacer);
+
+    /* the empty group-3 cells of periods 6 and 7 stand for the f-block rows; clicking filters by that series */
+    SERIES.forEach(function(s){
+      var tile = document.createElement("button");
+      tile.type = "button";
+      tile.className = "tile series-tile";
+      tile.style.background = "var(--" + s.category + ")";
+      tile.style.gridColumn = 4;
+      tile.style.gridRow = s.row;
+      tile.dataset.category = s.category;
+      tile.dataset.search = foldText(s.name + " " + s.from + " " + s.to);
+      tile.title = s.name + ": elementos " + s.from + " al " + s.to;
+      tile.setAttribute("aria-label", s.name + ", elementos " + s.from + " al " + s.to + ". Filtrar la tabla por esta serie");
+      tile.innerHTML =
+        '<span class="t-num">' + s.mark + '</span>' +
+        '<span class="s-name">' + s.name + '</span>' +
+        '<span class="s-range">' + s.from + '–' + s.to + '</span>';
+      tile.addEventListener("click", function(){
+        activeCategory = (activeCategory === this.dataset.category) ? null : this.dataset.category;
+        applyFilters();
+      });
+      grid.appendChild(tile);
+    });
 
     ELEMENTS.forEach(function(el){
       var tile = document.createElement("button");
@@ -981,10 +1110,52 @@
   $("helpCloseBtn").addEventListener("click", function(){ $("helpScrim").hidden = true; $("helpBtn").focus(); });
   $("helpScrim").addEventListener("click", function(e){ if (e.target === $("helpScrim")) { $("helpScrim").hidden = true; } });
 
+  /* history PDF and timeline image: the files load on first open, not with the page */
+  var mediaOpener = null;
+
+  function openMedia(scrimId, closeId){
+    mediaOpener = document.activeElement;
+    $(scrimId).hidden = false;
+    $(closeId).focus();
+  }
+
+  function closeMedia(scrimId){
+    $(scrimId).hidden = true;
+    if (mediaOpener && typeof mediaOpener.focus === "function") mediaOpener.focus();
+  }
+
+  /* phones and tablets either can't show a PDF inside an iframe or show only its first page */
+  function canEmbedPdf(){
+    return navigator.pdfViewerEnabled !== false && !window.matchMedia("(pointer: coarse)").matches;
+  }
+
+  $("historyBtn").addEventListener("click", function(){
+    var frame = $("historyFrame");
+    if (canEmbedPdf()){
+      if (!frame.src) frame.src = "historia-de-la-tabla-periodica.pdf#view=FitH";
+      frame.hidden = false;
+    } else {
+      $("historyFallback").hidden = false;
+    }
+    openMedia("historyScrim", "historyCloseBtn");
+  });
+  $("timelineBtn").addEventListener("click", function(){
+    var img = $("timelineImg");
+    if (!img.src) img.src = "linea-del-tiempo-tabla-periodica.jpeg";
+    openMedia("timelineScrim", "timelineCloseBtn");
+  });
+  ["historyScrim", "timelineScrim"].forEach(function(id){
+    $(id).addEventListener("click", function(e){ if (e.target === this) closeMedia(id); });
+  });
+  $("historyCloseBtn").addEventListener("click", function(){ closeMedia("historyScrim"); });
+  $("timelineCloseBtn").addEventListener("click", function(){ closeMedia("timelineScrim"); });
+
   document.addEventListener("keydown", function(e){
     if (e.key !== "Escape") return;
     if (!$("scrim").hidden) closeCard();
     if (!$("helpScrim").hidden) $("helpScrim").hidden = true;
+    if (!$("historyScrim").hidden) closeMedia("historyScrim");
+    if (!$("timelineScrim").hidden) closeMedia("timelineScrim");
   });
 </script>
 
